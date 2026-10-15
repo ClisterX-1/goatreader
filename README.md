@@ -4,7 +4,7 @@ GOATreader shows PDFs and texts one word at a time, with a focus letter, sentenc
 
 The site is fully static (HTML, CSS, JavaScript). It needs no server code, no database and no build step, so any static host works.
 
-The interface is in English by default. Visitors switch to German with the EN/DE buttons. A link with `?lang=de` (for example `https://goatreader.app/?lang=de`) opens the German version directly.
+The language follows the browser: if German is the visitor's first preferred language (de, de-DE, de-AT, de-CH …), the site starts in German, otherwise in English. The EN/DE buttons still switch the language, and that choice is remembered and wins over the browser language. A link with `?lang=de` or `?lang=en` forces a language and is remembered as well, so German campaign links can keep using `https://goatreader.app/?lang=de`. The detected browser language itself is never stored. The legal notice and the privacy policy follow the same rules. The fixed page head (title, description, preview image for link previews) is German.
 
 ## Files
 
@@ -70,6 +70,10 @@ Bei anderen Anbietern (Porkbun, Cloudflare und Co.) sind die Einträge dieselben
 ### Aktualisieren
 
 Geänderte Dateien im Repository über **Add file → Upload files** ersetzen. GitHub Pages veröffentlicht danach automatisch neu.
+
+### Sprache
+
+Die Seite richtet sich nach der Browsersprache: Ist Deutsch die erste bevorzugte Sprache (de, de-DE, de-AT, de-CH …), startet sie auf Deutsch, sonst auf Englisch. Mit EN/DE lässt sich weiter umschalten; diese Wahl merkt sich der Browser, und sie gilt dann vor der Browsersprache. Ein Link mit `?lang=de` oder `?lang=en` erzwingt die Sprache und wird ebenfalls gemerkt. Deutsche Kampagnenlinks können also weiter `https://goatreader.app/?lang=de` verwenden. Die erkannte Browsersprache selbst wird nicht gespeichert. Impressum und Datenschutzerklärung folgen denselben Regeln. Der feste Seitenkopf (Titel, Beschreibung und Vorschaubild für Linkvorschauen) ist deutsch.
 
 ### Rechtliches (keine Rechtsberatung)
 

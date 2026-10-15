@@ -1,22 +1,24 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>GOATreader · Read PDFs and texts word by word</title>
-<meta name="description" content="GOATreader shows PDFs and texts one word at a time, with a focus letter, sentence rewind, context view and honest speed numbers. Free, no sign-up, everything stays in your browser.">
+<title>GOATreader: PDFs und Texte Wort für Wort lesen</title>
+<meta name="description" content="GOATreader zeigt PDFs und Texte Wort für Wort, mit Fokusbuchstabe, Satz zurück, Kontextansicht und ehrlichen Tempowerten. Kostenlos, ohne Anmeldung, alles bleibt in deinem Browser.">
 <link rel="canonical" href="https://goatreader.app/">
 <meta name="theme-color" content="#ECEEF1" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0E141A" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="GOATreader">
 <meta property="og:title" content="GOATreader">
-<meta property="og:description" content="Read PDFs and texts one word at a time. Free, no sign-up, everything stays in your browser.">
+<meta property="og:description" content="Lies PDFs und Texte Wort für Wort. Kostenlos, ohne Anmeldung, alles bleibt in deinem Browser.">
 <meta property="og:url" content="https://goatreader.app/">
+<meta property="og:locale" content="de_DE">
+<meta property="og:locale:alternate" content="en_US">
 <meta property="og:image" content="https://goatreader.app/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="GOATreader: the word GOAT in a reading window, with the focus letter O in red">
+<meta property="og:image:alt" content="GOATreader: das Wort GOAT in einem Lesefenster, mit dem Fokusbuchstaben O in Rot">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
@@ -277,7 +279,7 @@ textarea{width:100%;border:1px solid var(--rule);border-radius:8px;background:va
 </style>
 </head>
 <body>
-<noscript><p class="noscript">GOATreader needs JavaScript to run. · GOATreader braucht JavaScript.</p></noscript>
+<noscript><p class="noscript">GOATreader braucht JavaScript. · <span lang="en">GOATreader needs JavaScript to run.</span></p></noscript>
 <div class="app" id="app">
   <header class="bar">
     <div class="brand">
@@ -483,7 +485,7 @@ textarea{width:100%;border:1px solid var(--rule);border-radius:8px;background:va
 const APP = 'GOATreader';
 const I18N = {
   en: {
-    'app.title': 'GOATreader · Read PDFs and texts word by word',
+    'app.title': 'GOATreader: Read PDFs and texts word by word',
     'doc.sampleChip': 'Sample',
     'doc.untitled': 'My text',
     'doc.file': 'File',
@@ -646,7 +648,7 @@ const I18N = {
     'foot.privacyLink': 'Privacy'
   },
   de: {
-    'app.title': 'GOATreader · PDFs und Texte Wort für Wort lesen',
+    'app.title': 'GOATreader: PDFs und Texte Wort für Wort lesen',
     'doc.sampleChip': 'Beispiel',
     'doc.untitled': 'Eigener Text',
     'doc.file': 'Datei',
@@ -860,6 +862,18 @@ Bereit? Unter „Laden“ öffnest du eine PDF oder fügst Text ein. Am Computer
 };
 
 let LANG = 'en';
+const LANGS = Object.keys(I18N);
+const isLang = l => LANGS.includes(l);
+// Bevorzugte Sprachen des Browsers (ohne navigator, etwa in Node, eine leere Liste)
+function browserLangs() {
+  if (typeof navigator === 'undefined' || !navigator) return [];
+  const l = navigator.languages;
+  return l && l.length ? Array.from(l) : [navigator.language].filter(Boolean);
+}
+// Deutsch, wenn die erste bevorzugte Sprache Deutsch ist (de, de-DE, de-AT, de-CH …), sonst Englisch
+const langFromBrowser = tags => (/^de(?![a-z])/i.test(String((tags && tags[0]) || '')) ? 'de' : 'en');
+// Reihenfolge: ?lang in der Adresse > gespeicherte Wahl > Browsersprache > Englisch
+const pickLang = (q, saved, tags = browserLangs()) => (isLang(q) ? q : isLang(saved) ? saved : langFromBrowser(tags));
 const LOCALE = { en: 'en-US', de: 'de-DE' };
 const PLURAL = { en: new Intl.PluralRules('en-US'), de: new Intl.PluralRules('de-DE') };
 const NF = { en: new Intl.NumberFormat('en-US'), de: new Intl.NumberFormat('de-DE') };
@@ -1490,11 +1504,12 @@ const FOCAL = 0.38;               // entspricht --focal
 const canStore = store.set('goatreader.probe', 1);
 const newId = () => 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 {
-  // Sprache: ?lang=de|en in der Adresse hat Vorrang und wird gemerkt, sonst die gespeicherte Wahl, sonst Englisch
+  // Sprache: ?lang=de|en in der Adresse hat Vorrang und wird gemerkt, dann die gespeicherte Wahl, dann die Browsersprache, sonst Englisch.
+  // Die erkannte Browsersprache wird nicht gespeichert, nur eine ausdrückliche Wahl (Adresse oder Umschalter).
   let q = '';
   try { q = (new URLSearchParams(location.search).get('lang') || '').toLowerCase(); } catch { /* keine Adresse */ }
-  if (I18N[q]) { LANG = q; store.set(K.lang, q); }
-  else { const l = store.get(K.lang, null); LANG = I18N[l] ? l : 'en'; }
+  LANG = pickLang(q, store.get(K.lang, null));
+  if (isLang(q)) store.set(K.lang, q);
 }
 
 const el = {
@@ -1843,10 +1858,10 @@ async function wake(on) {
 
 // ================= language =================
 function setLang(l) {
-  const next = I18N[l] ? l : 'en';
+  const next = isLang(l) ? l : 'en';
+  store.set(K.lang, next); // ausdrückliche Wahl: wird gemerkt, auch wenn die Sprache schon aktiv war (etwa über die Browsersprache)
   if (next === LANG) return;
   LANG = next;
-  store.set(K.lang, LANG);
   document.documentElement.lang = LANG;
   document.title = t('app.title');
   applyStatic();
