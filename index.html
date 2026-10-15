@@ -603,6 +603,8 @@ const I18N = {
     'card.empty': 'No text loaded',
     'card.empty.sub': 'Use “Load” to open a PDF or paste some text.',
     'card.section': 'Section',
+    'card.speed.first': 'Starting at {wpm} words per minute',
+    'card.speed.next': 'Now {wpm} words per minute',
     'card.para': 'End of paragraph',
     'card.para.sub': 'Tell yourself the key point. Tap or press Space to continue.',
     'card.end': 'End of text',
@@ -764,6 +766,8 @@ const I18N = {
     'card.empty': 'Kein Text geladen',
     'card.empty.sub': 'Unter „Laden“ öffnest du eine PDF oder fügst Text ein.',
     'card.section': 'Abschnitt',
+    'card.speed.first': 'Los geht’s mit {wpm} Wörtern pro Minute',
+    'card.speed.next': 'Jetzt {wpm} Wörter pro Minute',
     'card.para': 'Absatz zu Ende',
     'card.para.sub': 'Sag dir kurz die Kernaussage. Weiter mit Tippen oder Leertaste.',
     'card.end': 'Ende des Textes',
@@ -1011,8 +1015,8 @@ function parseText(raw) {
 }
 
 // Anzeigedauer eines Tokens in ms
-function delayOf(tk) {
-  const base = 60000 / S.wpm;
+function delayOf(tk, wpm = S.wpm) {
+  const base = 60000 / wpm;
   if (tk.kind === 'h') return Math.max(800, base * (2.5 + tk.nw * 1.2));
   let d = base;
   if (S.longWords && tk.letters > 8) d *= 1 + Math.min(0.6, (tk.letters - 8) * 0.07);
@@ -1332,6 +1336,9 @@ async function importPdf(file, fileTitle) {
 }
 // ================= state =================
 let D = null;                     // aktuelles Dokument
+// Beispieltext: Das Tempo steigt pro Abschnitt (300 → 400 → 500), bis jemand selbst am Tempo dreht
+const SAMPLE_STEPS = [300, 400, 500];
+let sampleAuto = true;
 let M = null;                     // geparstes Modell
 let cum = new Float64Array(1);    // aufsummierte Anzeigedauern
 let pos = 0;
@@ -1410,25 +1417,54 @@ function openDoc(doc) {
 }
 
 // ================= timing =================
+const autoTempo = () => !!(D && D.id === 'sample' && sampleAuto);
+const wpmOfHead = h => SAMPLE_STEPS[clamp(h, 0, SAMPLE_STEPS.length - 1)];
+function wpmAt(i) {
+  if (!autoTempo() || !M || !M.tokens.length) return S.wpm;
+  return wpmOfHead(M.tokens[clamp(i, 0, M.tokens.length - 1)].head);
+}
+// Anzeigedauer im laufenden Dokument; im Beispieltext je Abschnitt eigenes Tempo, Abschnittskarten mit Tempo-Hinweis etwas länger
+function tokenDelay(tk) {
+  if (!autoTempo()) return delayOf(tk);
+  return tk.kind === 'h' ? 1700 : delayOf(tk, wpmOfHead(tk.head));
+}
 function computeTimes() {
   const n = M.tokens.length;
   cum = new Float64Array(n + 1);
-  for (let i = 0; i < n; i++) cum[i + 1] = cum[i] + delayOf(M.tokens[i]);
+  for (let i = 0; i < n; i++) cum[i + 1] = cum[i] + tokenDelay(M.tokens[i]);
   updateTempo();
 }
-const effWpm = () => { const tot = cum[M.tokens.length]; return tot > 0 && M.words ? M.words / (tot / 60000) : S.wpm; };
+// Effektives Tempo: für den ganzen Text, im Beispieltext für den aktuellen Abschnitt
+function effWpm(whole = false) {
+  const n = M.tokens.length;
+  let a = 0, b = n, words = M.words;
+  if (!whole && autoTempo() && M.heads.length && n) {
+    const h = M.tokens[clamp(pos, 0, n - 1)].head;
+    a = h >= 0 ? M.heads[h].i : 0;
+    b = h + 1 < M.heads.length ? M.heads[h + 1].i : n;
+    words = 0;
+    for (let i = a; i < b; i++) if (M.tokens[i].kind === 'w') words++;
+  }
+  const tot = cum[b] - cum[a];
+  return tot > 0 && words ? words / (tot / 60000) : wpmAt(pos);
+}
+function showTempo() {
+  el.wpmOut.textContent = wpmAt(pos);
+  el.effOut.textContent = t('tempo.eff', { e: fmtN(Math.round(effWpm())) });
+}
 function updateTempo() {
-  const e = Math.round(effWpm());
-  el.wpmOut.textContent = S.wpm;
-  el.effOut.textContent = t('tempo.eff', { e: fmtN(e) });
-  $('#eff-help').textContent = t('set.eff', { e: fmtN(e), t: fmtDur(cum[M.tokens.length]) });
+  showTempo();
+  $('#eff-help').textContent = t('set.eff', { e: fmtN(Math.round(effWpm(true))), t: fmtDur(cum[M.tokens.length]) });
   const r = $('#wpm-range'); if (+r.value !== S.wpm) r.value = S.wpm;
   $('#wpm-range-out').textContent = t('set.wpm.out', { wpm: S.wpm });
   updateMeta();
 }
 function setWpm(v) {
+  const wasAuto = autoTempo();
+  sampleAuto = false;   // wer selbst am Tempo dreht, bestimmt es ab jetzt auch im Beispieltext
   S.wpm = clamp(Math.round(v / 10) * 10, 100, 1000);
   saveSettings(); computeTimes();
+  if (wasAuto && !playing && !stopNote) render(pos);   // Tempo-Hinweis auf der Abschnittskarte entfernen
 }
 
 // ================= rendering =================
@@ -1452,7 +1488,10 @@ function render(i) {
   const n = M.tokens.length;
   if (!n) { showCard(t('card.empty'), t('card.empty.sub')); updateMeta(); return; }
   const tk = M.tokens[clamp(i, 0, n - 1)];
-  if (tk.kind === 'h') showCard(tk.w, '', t('card.section'));
+  if (tk.kind === 'h') {
+    const sub = autoTempo() ? t(tk.head > 0 ? 'card.speed.next' : 'card.speed.first', { wpm: wpmOfHead(tk.head) }) : '';
+    showCard(tk.w, sub, t('card.section'));
+  }
   else {
     el.card.hidden = true; el.word.hidden = false;
     el.pre.textContent = tk.w.slice(0, tk.orp);
@@ -1489,6 +1528,7 @@ function updateMeta() {
     el.sectionLabel.textContent = t(M.heads.length ? 'eyebrow.section' : 'eyebrow.text');
     el.sectionName.textContent = M.heads.length ? (tk.head >= 0 ? M.heads[tk.head].text : t('eyebrow.start')) : D.title;
     el.outline.querySelectorAll('button').forEach((b, k) => b.classList.toggle('active', k === tk.head));
+    if (autoTempo()) showTempo();
   }
 }
 function buildRuler() {
@@ -1569,7 +1609,7 @@ function renderContext() {
 // ================= playback =================
 function syncPlay() {
   const n = M ? M.tokens.length : 0;
-  el.icPlay.hidden = playing; el.icPause.hidden = !playing;
+  el.icPlay.toggleAttribute('hidden', playing); el.icPause.toggleAttribute('hidden', !playing);
   el.playLabel.textContent = playing ? t('tr.pause') : (n && pos >= n ? t('tr.restart') : t('tr.play'));
   el.play.setAttribute('aria-label', playing ? t('tr.pause.aria') : t('tr.play.aria'));
   el.play.disabled = !n;
@@ -1580,7 +1620,7 @@ function play() {
   if (playing || !M.tokens.length) return;
   if (pos >= M.tokens.length) { pos = 0; session = { ms: 0, words: 0 }; }
   stopNote = null; playing = true;
-  rampLeft = S.ramp ? 10 : 0;
+  rampLeft = S.ramp && !autoTempo() ? 10 : 0;
   nextAt = performance.now(); playT0 = nextAt;
   toggleOutline(false);
   syncPlay(); wake(true); step();
@@ -1598,7 +1638,7 @@ const toggle = () => (playing ? pause() : play());
 function step() {
   if (!playing) return;
   render(pos);
-  let d = delayOf(M.tokens[pos]);
+  let d = tokenDelay(M.tokens[pos]);
   if (rampLeft > 0) { d *= 1 + 0.6 * (rampLeft / 10); rampLeft--; }
   const now = performance.now();
   nextAt = Math.max(nextAt, now - 120) + d;   // Drift ausgleichen, nach Hängern nicht hinterherhetzen
@@ -1626,7 +1666,7 @@ function goTo(i) {
   const n = M.tokens.length;
   if (!n) return;
   pos = clamp(i, 0, n - 1); stopNote = null;
-  if (playing) { clearTimeout(timer); rampLeft = S.ramp ? 6 : 0; nextAt = performance.now(); step(); }
+  if (playing) { clearTimeout(timer); rampLeft = S.ramp && !autoTempo() ? 6 : 0; nextAt = performance.now(); step(); }
   else { render(pos); renderContext(); savePos(); syncPlay(); }
 }
 function prevSentence() {
@@ -1728,8 +1768,8 @@ const tap = (btn, fn) => btn.addEventListener('click', e => { fn(); if (e.detail
 tap(el.play, toggle);
 tap(el.prev, prevSentence);
 tap(el.next, nextSentence);
-tap(el.wpmUp, () => setWpm(S.wpm + 10));
-tap(el.wpmDown, () => setWpm(S.wpm - 10));
+tap(el.wpmUp, () => setWpm(wpmAt(pos) + 10));
+tap(el.wpmDown, () => setWpm(wpmAt(pos) - 10));
 el.sectionBtn.addEventListener('click', () => toggleOutline());
 document.addEventListener('pointerdown', e => {
   if (!el.outline.hidden && !el.outline.contains(e.target) && !el.sectionBtn.contains(e.target)) toggleOutline(false);
@@ -1762,8 +1802,8 @@ document.addEventListener('keydown', e => {
     case 'Enter': if (tgt === el.reader) { e.preventDefault(); toggle(); } break;
     case 'ArrowLeft': case 'j': case 'J': e.preventDefault(); if (e.shiftKey) stepWord(-1); else prevSentence(); break;
     case 'ArrowRight': case 'l': case 'L': e.preventDefault(); if (e.shiftKey) stepWord(1); else nextSentence(); break;
-    case 'ArrowUp': e.preventDefault(); setWpm(S.wpm + (e.shiftKey ? 50 : 10)); break;
-    case 'ArrowDown': e.preventDefault(); setWpm(S.wpm - (e.shiftKey ? 50 : 10)); break;
+    case 'ArrowUp': e.preventDefault(); setWpm(wpmAt(pos) + (e.shiftKey ? 50 : 10)); break;
+    case 'ArrowDown': e.preventDefault(); setWpm(wpmAt(pos) - (e.shiftKey ? 50 : 10)); break;
     case 'Home': e.preventDefault(); goTo(0); break;
     case 'End': e.preventDefault(); goTo(M.tokens.length - 1); break;
   }
@@ -1846,7 +1886,7 @@ $('#paste-go').addEventListener('click', () => {
   openDoc({ id: newId(), title: titleFromText(text), source: 'text', text, original: text, pos: 0 });
   toast(t('t.pasteReady', { words: unit('word', M.words) }));
 });
-$('#open-sample').addEventListener('click', () => { closePanel(false); openDoc(sampleDoc()); });
+$('#open-sample').addEventListener('click', () => { closePanel(false); sampleAuto = true; openDoc(sampleDoc()); });
 function renderLibrary() {
   const ul = $('#lib-list');
   ul.replaceChildren();
@@ -1972,7 +2012,7 @@ for (const v of [200, 250, 300, 350, 400, 500, 600]) {
   $('#presets').append(b);
 }
 $('#reset-settings').addEventListener('click', () => {
-  Object.assign(S, DEFAULTS); saveSettings(); fillSettings(); applyDisplay(); computeTimes();
+  Object.assign(S, DEFAULTS); sampleAuto = true; saveSettings(); fillSettings(); applyDisplay(); computeTimes();
   toast(t('t.defaults'));
 });
 
@@ -2010,7 +2050,7 @@ if (document.fonts) {
 }
 // Für Tests und Fehlersuche
 window.__goatreader = {
-  state: () => ({ pos, playing, n: M.tokens.length, words: M.words, eff: effWpm(), doc: D && D.id, title: D && D.title, text: D && D.text, sents: M.sents, wpm: S.wpm, lang: LANG }),
+  state: () => ({ pos, playing, n: M.tokens.length, words: M.words, eff: effWpm(), effWhole: effWpm(true), wpmNow: wpmAt(pos), autoTempo: autoTempo(), doc: D && D.id, title: D && D.title, text: D && D.text, sents: M.sents, wpm: S.wpm, lang: LANG }),
   t, unit, dict: I18N
 };
 })();
