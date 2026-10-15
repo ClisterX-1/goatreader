@@ -1,0 +1,2019 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>GOATreader · Read PDFs and texts word by word</title>
+<meta name="description" content="GOATreader shows PDFs and texts one word at a time, with a focus letter, sentence rewind, context view and honest speed numbers. Free, no sign-up, everything stays in your browser.">
+<link rel="canonical" href="https://goatreader.app/">
+<meta name="theme-color" content="#ECEEF1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E141A" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GOATreader">
+<meta property="og:title" content="GOATreader">
+<meta property="og:description" content="Read PDFs and texts one word at a time. Free, no sign-up, everything stays in your browser.">
+<meta property="og:url" content="https://goatreader.app/">
+<meta property="og:image" content="https://goatreader.app/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="GOATreader: the word GOAT in a reading window, with the focus letter O in red">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="fonts/literata-latin-opsz-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+/* Layout: one reading instrument in the middle of the page. Reticle window, position ruler and transport
+   are stacked; the paragraph context sits underneath and appears when paused. Load / Text / Speed
+   open as a side sheet (full width on phones). */
+:root{
+  --paper:#ECEEF1;      /* page ground: cool grey paper */
+  --sheet:#F8F9FB;      /* panels, context, controls */
+  --ink:#131A22;        /* primary text */
+  --ink-2:#4A5562;      /* secondary text */
+  --ink-3:#7B8693;      /* labels, ticks */
+  --rule:#C6CDD6;       /* hairlines */
+  --mark:#C3122F;       /* fixation letter */
+  --pencil:#2456A6;     /* interactive accent ("blue pencil") */
+  --pencil-ink:#FFFFFF;
+  --pencil-soft:#DCE5F4;
+  --danger:#A3261B;
+  --scrim:rgba(19,26,34,.32);
+  --shadow:0 1px 2px rgba(19,26,34,.06),0 14px 36px rgba(19,26,34,.12);
+  --font-read:"Literata","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --font-ui:"IBM Plex Sans","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --focal:38%;
+  --word-size:clamp(2rem,5.2vw,3.4rem);
+  --word-scale:1;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E141A; --sheet:#151D25; --ink:#E3E8ED; --ink-2:#A2AEBA; --ink-3:#6E7A86; --rule:#2A3541;
+    --mark:#FF5B67; --pencil:#8AB1EE; --pencil-ink:#0B1117; --pencil-soft:#1D2B3C; --danger:#FF8A7A;
+    --scrim:rgba(0,0,0,.55); --shadow:0 1px 2px rgba(0,0,0,.45),0 14px 36px rgba(0,0,0,.45);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E141A; --sheet:#151D25; --ink:#E3E8ED; --ink-2:#A2AEBA; --ink-3:#6E7A86; --rule:#2A3541;
+  --mark:#FF5B67; --pencil:#8AB1EE; --pencil-ink:#0B1117; --pencil-soft:#1D2B3C; --danger:#FF8A7A;
+  --scrim:rgba(0,0,0,.55); --shadow:0 1px 2px rgba(0,0,0,.45),0 14px 36px rgba(0,0,0,.45);
+  color-scheme:dark;
+}
+
+/* Basis: im Claude-Artifact liefert diese Regeln der Seitenrahmen */
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+.noscript{max-width:40ch;margin:40px auto;padding:0 16px;font:16px/1.5 system-ui,sans-serif;text-align:center}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--font-ui);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--pencil);outline-offset:2px}
+.app{min-height:100%;display:flex;flex-direction:column;padding-inline:16px}
+
+/* ---------- top bar ---------- */
+.bar{display:flex;align-items:center;gap:12px;width:min(1000px,100%);margin-inline:auto;padding-block:12px 6px}
+.brand{display:flex;align-items:center;gap:9px;flex:none}
+.brand svg{width:22px;height:22px;color:var(--mark)}
+.brand-name{font-family:var(--font-read);font-weight:600;font-size:19px;letter-spacing:.01em}
+.brand-lite{font-weight:400}
+.doc{display:flex;align-items:center;gap:8px;min-width:0;flex:1;color:var(--ink-2);font-size:14px;overflow:hidden;container-type:inline-size}
+.doc-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.chip{flex:none;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;border:1px solid var(--rule);color:var(--ink-2)}
+@container (max-width:160px){.chip{display:none}}   /* wenig Platz: lieber den Titel zeigen */
+@container (max-width:56px){.doc-title{display:none}}
+.lang{display:inline-flex;flex:none;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.lang button{border:0;background:transparent;height:30px;padding:0 9px;font-size:12px;font-weight:600;letter-spacing:.05em;color:var(--ink-2);cursor:pointer}
+.lang button + button{border-left:1px solid var(--rule)}
+.lang button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.lang button:focus-visible{outline-offset:-2px}
+.bar-actions{display:flex;gap:6px;flex:none}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:40px;padding:0 14px;border-radius:8px;
+  border:1px solid var(--rule);background:var(--sheet);cursor:pointer;font-weight:500;font-size:14px;white-space:nowrap;
+  transition:border-color .15s,background-color .15s}
+.btn:hover{border-color:var(--ink-3)}
+.btn svg{width:18px;height:18px;flex:none}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.ghost:hover{background:var(--sheet);border-color:var(--rule)}
+.btn.primary{background:var(--pencil);border-color:var(--pencil);color:var(--pencil-ink)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.icon{width:40px;padding:0}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.small{height:32px;padding:0 10px;font-size:13px}
+.btn.danger{color:var(--danger)}
+
+/* ---------- instrument ---------- */
+.main{flex:1;display:flex;flex-direction:column;gap:18px;width:min(1000px,100%);margin-inline:auto;padding-block:8px 28px}
+.instrument{position:relative;display:flex;flex-direction:column;gap:10px}
+.eyebrow{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:30px}
+.section-btn{display:flex;align-items:center;gap:8px;min-width:0;max-width:100%;background:none;border:0;padding:4px 6px;margin-left:-6px;border-radius:6px;cursor:pointer;color:var(--ink-2)}
+.section-btn:hover:not(:disabled){background:var(--sheet)}
+.section-btn:disabled{cursor:default}
+.label{font-size:11px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);flex:none}
+.section-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:14px}
+.section-btn svg{width:14px;height:14px;flex:none;color:var(--ink-3)}
+.page-label{font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums;flex:none}
+
+.outline{position:absolute;z-index:6;top:36px;left:0;width:min(440px,100%);max-height:min(56vh,460px);overflow:auto;
+  background:var(--sheet);border:1px solid var(--rule);border-radius:10px;box-shadow:var(--shadow);padding:6px}
+.outline button{display:grid;grid-template-columns:1fr auto;gap:12px;width:100%;text-align:left;background:none;border:0;
+  padding:8px 10px;border-radius:6px;cursor:pointer;font-size:14px;color:var(--ink)}
+.outline button:hover,.outline button.active{background:var(--pencil-soft)}
+.outline .pg{color:var(--ink-3);font-variant-numeric:tabular-nums;font-size:13px}
+
+.reader{position:relative;height:clamp(170px,32vh,290px);overflow:hidden;cursor:pointer;user-select:none;-webkit-user-select:none;
+  touch-action:pan-y;border-radius:4px}
+.reader:focus-visible{outline:1.5px solid var(--ink-3);outline-offset:6px}
+.rule{position:absolute;left:0;right:0;height:1px;background:var(--rule)}
+.rule.top{top:22%}.rule.bottom{bottom:22%}
+.tick{position:absolute;left:var(--focal);width:1px;height:14px;background:var(--ink-3)}
+.tick.top{top:22%}.tick.bottom{bottom:22%}
+.reader.no-guides .rule,.reader.no-guides .tick{display:none}
+.word{position:absolute;left:0;top:50%;white-space:nowrap;font-family:var(--font-read);font-weight:480;
+  font-size:calc(var(--word-size) * var(--word-scale));line-height:1.1;transform-origin:0 50%;will-change:transform;
+  font-optical-sizing:auto;letter-spacing:.005em}
+.reader.sans .word{font-family:var(--font-ui);font-weight:500}
+.word .orp{color:var(--mark)}
+.reader.no-mark .word .orp{color:inherit}
+.card{position:absolute;inset:23% 18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center}
+.card .t{font-family:var(--font-read);font-weight:560;font-size:clamp(1.15rem,2.7vw,1.65rem);line-height:1.25;max-width:32ch;text-wrap:balance}
+.card .s{color:var(--ink-2);font-size:14px;max-width:46ch;text-wrap:balance}
+
+/* ruler */
+.ruler{position:relative;height:30px;cursor:pointer;touch-action:none}
+.ruler-track{position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;background:var(--rule);border-radius:2px}
+.ruler-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--pencil);border-radius:2px}
+.ruler-ticks{position:absolute;inset:0}
+.ruler-ticks .pg{position:absolute;top:-4px;width:1px;height:12px;background:var(--ink-3);opacity:.6}
+.ruler-ticks .sec{position:absolute;top:-9px;width:2px;height:22px;margin-left:-1px;background:var(--ink-2);border-radius:1px}
+.ruler-thumb{position:absolute;top:50%;left:0;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;
+  background:var(--sheet);border:2px solid var(--pencil);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+
+/* transport */
+.transport{display:flex;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap;margin-top:4px}
+.tgroup{display:flex;gap:8px;align-items:center}
+.btn.play{min-width:128px;height:46px;font-size:15px}
+.tempo{display:flex;align-items:center;gap:8px}
+.tempo .btn{width:40px;padding:0;font-size:20px;font-weight:400}
+.tempo-read{display:grid;grid-template-columns:auto auto;align-items:baseline;column-gap:5px;min-width:122px;justify-content:center}
+.tempo-read output{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.tempo-read .unit{font-size:13px;color:var(--ink-2)}
+.tempo-read .eff{grid-column:1 / -1;font-size:12px;color:var(--ink-3);text-align:center;font-variant-numeric:tabular-nums}
+
+/* context */
+.context{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;
+  transition:opacity .2s}
+.context-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline}
+.hint{font-size:12.5px;color:var(--ink-3)}
+.context-section{margin:0;font-family:var(--font-read);font-size:15px;font-weight:600;color:var(--ink-2)}
+.context-text{margin:0;font-family:var(--font-read);font-size:17px;line-height:1.65;max-width:68ch;max-height:15.5em;overflow:auto;overflow-wrap:anywhere}
+.context-text span{cursor:pointer;border-radius:3px}
+.context-text span:hover{text-decoration:underline;text-decoration-color:var(--ink-3);text-underline-offset:3px}
+.context-text span.cur{background:var(--pencil-soft);box-shadow:0 0 0 2px var(--pencil-soft);text-decoration:none}
+.context-text .gap{color:var(--ink-3);cursor:default}
+.keys{margin:0;font-size:12.5px;color:var(--ink-3);text-align:center}
+.keys kbd{font-family:var(--font-ui);font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--sheet);color:var(--ink-2)}
+@media (hover:none){.keys{display:none}}
+
+/* while reading: quiet chrome */
+.foot{display:flex;justify-content:center;gap:4px 14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-3);text-align:center;margin-top:auto;padding-top:8px}
+.foot a{color:var(--ink-2);text-underline-offset:3px}
+.foot a:hover{color:var(--pencil)}
+body.is-playing .foot{opacity:.4}
+body.is-playing .context{opacity:0;pointer-events:none}
+body.is-playing .bar,body.is-playing .meta,body.is-playing .tempo,body.is-playing .keys,body.is-playing .eyebrow{opacity:.4;transition:opacity .25s}
+body.is-playing .bar:hover,body.is-playing .tempo:hover,body.is-playing .bar:focus-within,body.is-playing .tempo:focus-within{opacity:1}
+
+/* ---------- side sheet ---------- */
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:20}
+.panel{position:fixed;top:0;right:0;bottom:0;z-index:21;width:min(460px,100%);display:flex;flex-direction:column;background:var(--sheet);
+  border-left:1px solid var(--rule);box-shadow:var(--shadow);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  animation:slide .18s ease-out}
+@keyframes slide{from{transform:translateX(24px);opacity:.4}to{transform:none;opacity:1}}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 12px 12px 20px;border-bottom:1px solid var(--rule)}
+.panel-head h2{margin:0;font-family:var(--font-read);font-size:19px;font-weight:600}
+.panel-body{flex:1;overflow:auto;padding:18px 20px 28px;display:flex;flex-direction:column;gap:24px}
+.group{display:flex;flex-direction:column;gap:10px}
+.note{margin:0;font-size:13px;color:var(--ink-2)}
+.drop{display:flex;flex-direction:column;align-items:center;gap:6px;padding:26px 16px;border:1.5px dashed var(--ink-3);border-radius:10px;
+  text-align:center;cursor:pointer;background:var(--paper)}
+.drop:hover,.drop:focus-within{border-color:var(--pencil)}
+.drop svg{width:28px;height:28px;color:var(--pencil)}
+.drop strong{font-size:15px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+input[type=text]{width:100%;border:1px solid var(--rule);border-radius:8px;background:var(--paper);padding:8px 12px}
+textarea{width:100%;border:1px solid var(--rule);border-radius:8px;background:var(--paper);padding:10px 12px;line-height:1.55;resize:vertical}
+#paste-text{min-height:120px}
+#edit-text{min-height:46vh;font-size:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.lib{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.lib li{display:flex;align-items:center;gap:6px;border:1px solid var(--rule);border-radius:8px;background:var(--paper)}
+.lib .open{flex:1;min-width:0;text-align:left;background:none;border:0;padding:9px 12px;cursor:pointer;display:flex;flex-direction:column;gap:2px;border-radius:8px}
+.lib .open:hover{background:var(--pencil-soft)}
+.lib .ttl{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lib .sub{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.lib .del{margin-right:6px}
+.lib li.current{border-color:var(--pencil)}
+.empty{margin:0;font-size:13px;color:var(--ink-3)}
+
+/* settings rows */
+.field{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center}
+.field label{font-size:14px}
+.field output{font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums;min-width:4.5em;text-align:right}
+.field input[type=range]{grid-column:1 / -1;width:100%;accent-color:var(--pencil)}
+.field .help{grid-column:1 / -1;font-size:12.5px;color:var(--ink-3)}
+.check{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:start;font-size:14px;cursor:pointer}
+.check input{margin-top:3px;accent-color:var(--pencil);width:16px;height:16px}
+.check .help{grid-column:2;font-size:12.5px;color:var(--ink-3)}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.seg label{position:relative;cursor:pointer}
+.seg input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.seg span{display:block;padding:6px 14px;font-size:14px}
+.seg input:checked + span{background:var(--pencil);color:var(--pencil-ink)}
+.seg input:focus-visible + span{outline:2px solid var(--pencil);outline-offset:-2px}
+.presets{display:flex;gap:6px;flex-wrap:wrap}
+.keylist{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0;font-size:13.5px}
+.keylist dt{color:var(--ink-2)}
+.keylist dd{margin:0}
+.stats{margin:0;font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+
+/* overlays */
+.drop-overlay{position:fixed;inset:10px;z-index:40;border:2px dashed var(--pencil);border-radius:14px;background:var(--scrim);
+  display:flex;align-items:center;justify-content:center;pointer-events:none}
+.drop-overlay div{background:var(--sheet);padding:14px 20px;border-radius:10px;font-weight:600;box-shadow:var(--shadow)}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50;max-width:min(560px,calc(100% - 32px));
+  background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:10px;box-shadow:var(--shadow);font-size:14px}
+.toast[data-kind="error"]{background:var(--danger);color:#fff}
+
+@media (max-width:480px){.brand-name{display:none}}
+@media (max-width:640px){
+  .bar{gap:8px}
+  .bar-actions{gap:2px}
+  .bar-actions .btn{flex-direction:column;gap:3px;height:46px;min-width:44px;padding:0 4px}
+  .bar-actions .btn span{font-size:10.5px;font-weight:500;line-height:1}
+  .doc{font-size:13px}
+  .transport{justify-content:center}
+  .tgroup{width:100%;justify-content:center}
+  .btn.play{flex:1;max-width:220px}
+  .tempo{width:100%;justify-content:center}
+  .context-text{font-size:16px}
+  .panel{width:100%;border-left:0}
+}
+@media (max-width:420px){
+  /* schmale Handys: Satz-Knöpfe nur mit Symbol (Beschriftung bleibt als aria-label und title) */
+  .tgroup .btn:not(.play){width:46px;height:46px;padding:0}
+  .tgroup .btn:not(.play) span{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+<noscript><p class="noscript">GOATreader needs JavaScript to run. · GOATreader braucht JavaScript.</p></noscript>
+<div class="app" id="app">
+  <header class="bar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 5h20M2 19h20M9 5v4M9 19v-4" stroke-linecap="round"/><path d="M9 12h0" stroke-width="3.2" stroke-linecap="round"/></svg>
+      <span class="brand-name">GOAT<span class="brand-lite">reader</span></span>
+    </div>
+    <div class="doc"><span class="doc-title" id="doc-title"></span><span class="chip" id="doc-chip" data-i18n="doc.sampleChip" hidden>Sample</span></div>
+    <div class="lang" role="group" aria-label="Language" data-i18n-attr="aria-label:bar.lang">
+      <button type="button" data-lang="en" lang="en" title="English" aria-pressed="true">EN</button>
+      <button type="button" data-lang="de" lang="de" title="Deutsch" aria-pressed="false">DE</button>
+    </div>
+    <nav class="bar-actions" aria-label="Document" data-i18n-attr="aria-label:bar.nav">
+      <button class="btn ghost" id="open-load" type="button" aria-label="Load a text" title="Load a text" data-i18n-attr="aria-label:bar.load.title;title:bar.load.title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M4 15v4h16v-4"/></svg><span data-i18n="bar.load">Load</span>
+      </button>
+      <button class="btn ghost" id="open-edit" type="button" aria-label="Review and edit the text" title="Review and edit the text" data-i18n-attr="aria-label:bar.text.title;title:bar.text.title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 11h16M4 16h9M16.5 19.5l4-4-1.5-1.5-4 4V19.5z"/></svg><span data-i18n="bar.text">Text</span>
+      </button>
+      <button class="btn ghost" id="open-settings" type="button" aria-label="Speed and display settings" title="Speed and display settings" data-i18n-attr="aria-label:bar.speed.title;title:bar.speed.title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span data-i18n="bar.speed">Speed</span>
+      </button>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="instrument" aria-label="Reading window" data-i18n-attr="aria-label:reader.region">
+      <div class="eyebrow">
+        <button class="section-btn" id="section-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="outline">
+          <span class="label" id="section-label">Section</span><span class="section-name" id="section-name">–</span>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>
+        </button>
+        <span class="page-label" id="page-label" hidden></span>
+      </div>
+      <div class="outline" id="outline" hidden></div>
+
+      <div class="reader" id="reader" tabindex="0" role="button" aria-label="Reading window, paused. Press Space or tap to start.">
+        <div class="rule top"></div><div class="rule bottom"></div>
+        <div class="tick top"></div><div class="tick bottom"></div>
+        <div class="word" id="word" aria-hidden="true"><span id="w-pre"></span><span class="orp" id="w-orp"></span><span id="w-post"></span></div>
+        <div class="card" id="card" hidden></div>
+      </div>
+
+      <div class="ruler" id="ruler" role="slider" tabindex="0" aria-label="Position in the text" data-i18n-attr="aria-label:ruler.label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="ruler-track"><div class="ruler-fill" id="ruler-fill"></div><div class="ruler-ticks" id="ruler-ticks"></div></div>
+        <div class="ruler-thumb" id="ruler-thumb"></div>
+      </div>
+      <div class="meta"><span id="meta-pos"></span><span id="meta-left"></span></div>
+
+      <div class="transport">
+        <div class="tgroup">
+          <button class="btn" id="btn-prev" type="button" title="Previous sentence (←)" aria-label="Previous sentence" data-i18n-attr="title:tr.prev.title;aria-label:tr.prev.aria">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 5v14M18 6l-8 6 8 6z"/></svg><span data-i18n="tr.prev">Sentence</span>
+          </button>
+          <button class="btn primary play" id="btn-play" type="button">
+            <svg id="ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>
+            <svg id="ic-pause" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>
+            <span id="play-label">Read</span>
+          </button>
+          <button class="btn" id="btn-next" type="button" title="Next sentence (→)" aria-label="Next sentence" data-i18n-attr="title:tr.next.title;aria-label:tr.next.aria">
+            <span data-i18n="tr.next">Sentence</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 5v14M6 6l8 6-8 6z"/></svg>
+          </button>
+        </div>
+        <div class="tempo" role="group" aria-label="Speed" data-i18n-attr="aria-label:tempo.group">
+          <button class="btn" id="wpm-down" type="button" aria-label="Slower (↓)" title="Slower (↓)" data-i18n-attr="aria-label:tempo.slower;title:tempo.slower">−</button>
+          <div class="tempo-read" title="Speed per word. Effective = including the pauses at sentence and paragraph ends." data-i18n-attr="title:tempo.title">
+            <output id="wpm-out" for="wpm-range">300</output><span class="unit" data-i18n="tempo.unit">wpm</span>
+            <span class="eff" id="eff-out"></span>
+          </div>
+          <button class="btn" id="wpm-up" type="button" aria-label="Faster (↑)" title="Faster (↑)" data-i18n-attr="aria-label:tempo.faster;title:tempo.faster">+</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="context" id="context" aria-label="In context" data-i18n-attr="aria-label:ctx.label">
+      <div class="context-head"><span class="label" data-i18n="ctx.label">In context</span><span class="hint" data-i18n="ctx.hint">Tap a word to jump there</span></div>
+      <h3 class="context-section" id="context-section" hidden></h3>
+      <p class="context-text" id="context-text"></p>
+    </section>
+
+    <p class="keys" data-i18n-html="keys"><kbd>Space</kbd> start/pause · <kbd>←</kbd> <kbd>→</kbd> previous/next sentence · <kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd> one word · <kbd>↑</kbd> <kbd>↓</kbd> speed</p>
+    <footer class="foot"><span data-i18n="foot.privacy">Your texts stay in your browser. Nothing is uploaded.</span><span><a href="legal.html" data-i18n="foot.legal">Legal notice</a> · <a href="privacy.html" data-i18n="foot.privacyLink">Privacy</a></span></footer>
+  </main>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<aside class="panel" id="panel-load" role="dialog" aria-modal="true" aria-labelledby="h-load" hidden>
+  <div class="panel-head"><h2 id="h-load" data-i18n="load.title">Load a text</h2>
+    <button class="btn ghost icon" type="button" data-close aria-label="Close" data-i18n-attr="aria-label:close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="panel-body">
+    <div class="group">
+      <label class="drop" for="file-input">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 17v-6M9.5 13.5 12 11l2.5 2.5"/></svg>
+        <strong data-i18n="load.choose">Choose a PDF, TXT or Markdown file</strong>
+        <span class="note" data-i18n="load.drop">or drop the file anywhere on this page</span>
+        <input class="sr-only" type="file" id="file-input" data-autofocus accept=".pdf,.txt,.md,.markdown,application/pdf,text/plain,text/markdown">
+      </label>
+      <p class="note" data-i18n="load.note">For PDFs, headers and footers, hyphenation, citation brackets and the reference list are removed. You can adjust this under “Text”.</p>
+    </div>
+    <div class="group">
+      <label class="label" for="paste-text" data-i18n="load.paste">Paste text</label>
+      <textarea id="paste-text" placeholder="Paste your text here. Blank lines separate paragraphs; lines starting with # become headings." data-i18n-attr="placeholder:load.paste.ph"></textarea>
+      <div class="row"><button class="btn primary" type="button" id="paste-go" data-i18n="load.paste.go">Read this text</button></div>
+    </div>
+    <div class="group">
+      <span class="label" data-i18n="load.recent">Recently read</span>
+      <ul class="lib" id="lib-list"></ul>
+      <p class="empty" id="lib-empty" data-i18n="load.empty" hidden>Nothing saved yet. Loaded texts and your reading position stay in this browser.</p>
+      <div class="row"><button class="btn small" type="button" id="open-sample" data-i18n="load.sample">Open sample text</button></div>
+    </div>
+  </div>
+</aside>
+
+<aside class="panel" id="panel-edit" role="dialog" aria-modal="true" aria-labelledby="h-edit" hidden>
+  <div class="panel-head"><h2 id="h-edit" data-i18n="edit.title">Review text</h2>
+    <button class="btn ghost icon" type="button" data-close aria-label="Close" data-i18n-attr="aria-label:close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="panel-body">
+    <div class="group">
+      <label class="label" for="edit-title" data-i18n="edit.docTitle">Title</label>
+      <input id="edit-title" type="text">
+    </div>
+    <div class="group">
+      <label class="label" for="edit-text" data-i18n="edit.text">Text</label>
+      <textarea id="edit-text" spellcheck="false" data-autofocus></textarea>
+      <p class="stats" id="edit-stats"></p>
+      <p class="note" data-i18n-html="edit.note">Blank lines separate paragraphs. Lines starting with <code>#</code> are headings. <code>⟦p.4⟧</code> marks the start of a page.</p>
+      <div class="row">
+        <button class="btn primary" type="button" id="edit-apply" data-i18n="edit.apply">Apply</button>
+        <button class="btn" type="button" id="edit-copy" data-i18n="edit.copy">Copy text</button>
+        <button class="btn" type="button" id="edit-restore" data-i18n="edit.restore" hidden>Restore original</button>
+      </div>
+    </div>
+    <div class="group" id="clean-box">
+      <span class="label" data-i18n="clean.title">PDF clean-up</span>
+      <label class="check"><input type="checkbox" id="opt-dropRunning"><span data-i18n="clean.running">Remove headers, footers, page numbers and formula fragments</span></label>
+      <label class="check"><input type="checkbox" id="opt-dropCites"><span data-i18n="clean.cites">Hide citation brackets and footnote numbers</span><span class="help" data-i18n="clean.cites.help">e.g. [12] or (Rayner et al., 2016)</span></label>
+      <label class="check"><input type="checkbox" id="opt-dropRefs"><span data-i18n="clean.refs">Leave out the reference list</span></label>
+      <label class="check"><input type="checkbox" id="opt-headings"><span data-i18n="clean.heads">Detect headings</span><span class="help" data-i18n="clean.heads.help">for the outline and the section display</span></label>
+      <div class="row"><button class="btn" type="button" id="reclean" data-i18n="clean.again">Clean up again</button></div>
+      <p class="note" id="reclean-note" data-i18n="clean.note" hidden>Applies to the next PDF import. To clean up this PDF again, load it once more.</p>
+    </div>
+  </div>
+</aside>
+
+<aside class="panel" id="panel-settings" role="dialog" aria-modal="true" aria-labelledby="h-settings" hidden>
+  <div class="panel-head"><h2 id="h-settings" data-i18n="set.title">Speed and display</h2>
+    <button class="btn ghost icon" type="button" data-close aria-label="Close" data-i18n-attr="aria-label:close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="panel-body">
+    <div class="group">
+      <span class="label" data-i18n="set.speed">Speed</span>
+      <div class="field"><label for="wpm-range" data-i18n="set.wpm">Words per minute</label><output id="wpm-range-out" for="wpm-range"></output>
+        <input type="range" id="wpm-range" min="100" max="1000" step="10" data-autofocus>
+        <span class="help" id="eff-help"></span></div>
+      <div class="presets" id="presets"></div>
+      <label class="check"><input type="checkbox" id="opt-ramp"><span data-i18n="set.ramp">Gentle start</span><span class="help" data-i18n="set.ramp.help">The first words after you start run a little slower.</span></label>
+    </div>
+    <div class="group">
+      <span class="label" data-i18n="set.pauses">Pauses</span>
+      <div class="field"><label for="opt-sentPause" data-i18n="set.sent">At the end of a sentence</label><output id="out-sentPause"></output><input type="range" id="opt-sentPause" min="0" max="3" step="0.25"></div>
+      <div class="field"><label for="opt-clausePause" data-i18n="set.clause">After a comma, semicolon or colon</label><output id="out-clausePause"></output><input type="range" id="opt-clausePause" min="0" max="1.5" step="0.1"></div>
+      <div class="field"><label for="opt-paraPause" data-i18n="set.para">At the end of a paragraph</label><output id="out-paraPause"></output><input type="range" id="opt-paraPause" min="0" max="4" step="0.25"></div>
+      <label class="check"><input type="checkbox" id="opt-longWords"><span data-i18n="set.long">Show long words a little longer</span></label>
+      <label class="check"><input type="checkbox" id="opt-paraStop"><span data-i18n="set.paraStop">Stop after each paragraph</span><span class="help" data-i18n="set.paraStop.help">Time to tell yourself the key point. Continue with Space.</span></label>
+    </div>
+    <div class="group">
+      <span class="label" data-i18n="set.display">Display</span>
+      <div class="row"><span style="font-size:14px" data-i18n="set.font">Font</span>
+        <div class="seg" role="radiogroup" aria-label="Font" data-i18n-attr="aria-label:set.font">
+          <label><input type="radio" name="font" id="font-serif" value="serif"><span data-i18n="set.serif">Serif</span></label>
+          <label><input type="radio" name="font" id="font-sans" value="sans"><span data-i18n="set.sans">Sans</span></label>
+        </div>
+      </div>
+      <div class="field"><label for="opt-size" data-i18n="set.size">Font size</label><output id="out-size"></output><input type="range" id="opt-size" min="0.7" max="1.5" step="0.05"></div>
+      <label class="check"><input type="checkbox" id="opt-mark"><span data-i18n="set.mark">Highlight the focus letter in color</span></label>
+      <label class="check"><input type="checkbox" id="opt-guides"><span data-i18n="set.guides">Show fixation guides</span></label>
+    </div>
+    <div class="group">
+      <span class="label" data-i18n="set.keys">Keyboard</span>
+      <dl class="keylist">
+        <dt data-i18n="set.k.space">Space</dt><dd data-i18n="set.k.space.d">start / pause</dd>
+        <dt>← / →</dt><dd data-i18n="set.k.lr.d">previous / next sentence</dd>
+        <dt>Shift + ← / →</dt><dd data-i18n="set.k.shift.d">one word back / forward</dd>
+        <dt>↑ / ↓</dt><dd data-i18n="set.k.ud.d">speed ±10 (with Shift ±50)</dd>
+        <dt data-i18n="set.k.home">Home</dt><dd data-i18n="set.k.home.d">back to the beginning</dd>
+        <dt>Esc</dt><dd data-i18n="set.k.esc.d">close the panel</dd>
+      </dl>
+      <p class="note" data-i18n="set.phone">On a phone: tap the reading window to start and pause; swipe left or right to jump one sentence.</p>
+    </div>
+    <div class="row"><button class="btn" type="button" id="reset-settings" data-i18n="set.reset">Reset to defaults</button></div>
+  </div>
+</aside>
+
+<div class="drop-overlay" id="drop-overlay" hidden><div data-i18n="drop.release">Drop to load</div></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(() => {
+'use strict';
+// ================= i18n =================
+const APP = 'GOATreader';
+const I18N = {
+  en: {
+    'app.title': 'GOATreader · Read PDFs and texts word by word',
+    'doc.sampleChip': 'Sample',
+    'doc.untitled': 'My text',
+    'doc.file': 'File',
+    'sample.title': 'What happens when you read fast',
+    'bar.lang': 'Language',
+    'bar.nav': 'Document',
+    'bar.load': 'Load',
+    'bar.load.title': 'Load text',
+    'bar.text': 'Text',
+    'bar.text.title': 'Review and edit the text',
+    'bar.speed': 'Speed',
+    'bar.speed.title': 'Speed and display settings',
+    'reader.region': 'Reading window',
+    'reader.label.paused': 'Reading window, paused. Press Space or tap to start.',
+    'reader.label.playing': 'Reading window, running. Press Space or tap to pause.',
+    'eyebrow.section': 'Section',
+    'eyebrow.text': 'Text',
+    'eyebrow.start': 'Beginning',
+    'page.short': 'p. {p} / {n}',
+    'outline.page': 'p. {p}',
+    'outline.pct': '{p}%',
+    'marker.page': 'p.',
+    'ruler.label': 'Position in the text',
+    'ruler.valuetext': '{pct} percent, {pos}',
+    'meta.pos': 'Word {i} of {n}',
+    'meta.left': '{t} left',
+    'meta.done': 'Done',
+    'tr.prev': 'Sentence',
+    'tr.prev.title': 'Previous sentence (←)',
+    'tr.prev.aria': 'Previous sentence',
+    'tr.next': 'Sentence',
+    'tr.next.title': 'Next sentence (→)',
+    'tr.next.aria': 'Next sentence',
+    'tr.play': 'Read',
+    'tr.pause': 'Pause',
+    'tr.restart': 'Restart',
+    'tr.play.aria': 'Start reading (Space)',
+    'tr.pause.aria': 'Pause (Space)',
+    'tempo.group': 'Speed',
+    'tempo.slower': 'Slower (↓)',
+    'tempo.faster': 'Faster (↑)',
+    'tempo.title': 'Set speed for each word, without pauses. Effective = with all pauses.',
+    'tempo.unit': 'wpm',
+    'tempo.eff': '≈ {e} effective',
+    'ctx.label': 'In context',
+    'ctx.hint': 'Tap a word to jump there',
+    'keys': '<kbd>Space</kbd> start/pause · <kbd>←</kbd> <kbd>→</kbd> previous/next sentence · <kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd> one word · <kbd>↑</kbd> <kbd>↓</kbd> speed',
+    'close': 'Close',
+    'load.title': 'Load text',
+    'load.choose': 'Choose a PDF, TXT or Markdown file',
+    'load.drop': 'or drop the file anywhere on this page',
+    'load.note': 'When you load a PDF, {app} removes headers and footers, line-break hyphens, in-text citations and the reference list. You can adjust this under “Text”.',
+    'load.paste': 'Paste text',
+    'load.paste.ph': 'Paste your text here. Blank lines separate paragraphs; lines starting with # become headings.',
+    'load.paste.go': 'Read this text',
+    'load.recent': 'Recently read',
+    'load.empty': 'Nothing saved yet. Loaded texts and your reading position stay in this browser.',
+    'load.sample': 'Open sample text',
+    'lib.sub': '{words} · {p}% read',
+    'lib.remove': 'Remove',
+    'lib.sure': 'Sure?',
+    'lib.remove.aria': 'Remove “{title}”',
+    'edit.title': 'Review text',
+    'edit.docTitle': 'Title',
+    'edit.text': 'Text',
+    'edit.stats': '{words} · {sents} · {heads} · approx. {t} at {wpm} wpm',
+    'edit.note': 'Blank lines separate paragraphs. Lines starting with <code>#</code> are headings. <code>⟦p.4⟧</code> marks the start of a page.',
+    'edit.apply': 'Apply',
+    'edit.copy': 'Copy text',
+    'edit.restore': 'Restore original',
+    'clean.title': 'PDF clean-up',
+    'clean.running': 'Remove headers, footers, page numbers and formula fragments',
+    'clean.cites': 'Remove in-text citations and footnote numbers',
+    'clean.cites.help': 'e.g. [12] or (Rayner et al., 2016)',
+    'clean.refs': 'Leave out the reference list and everything after it',
+    'clean.heads': 'Detect headings',
+    'clean.heads.help': 'for the outline and the section display',
+    'clean.again': 'Clean up again',
+    'clean.note': 'Applies to the next PDF you load. To clean up a PDF from “Recently read” again, load the file once more.',
+    'set.title': 'Speed and display',
+    'set.speed': 'Speed',
+    'set.wpm': 'Words per minute',
+    'set.wpm.out': '{wpm} wpm',
+    'set.eff': 'Effective ≈ {e} words per minute for this text, including all pauses. Total time approx. {t}.',
+    'set.preset.aria': '{v} words per minute',
+    'set.ramp': 'Gentle start',
+    'set.ramp.help': 'The first words after you start run a little slower.',
+    'set.pauses': 'Pauses',
+    'set.sent': 'At the end of a sentence',
+    'set.clause': 'After a comma, semicolon or colon',
+    'set.para': 'At the end of a paragraph',
+    'set.pause.out': '+{x} × word time',
+    'set.pause.none': 'none',
+    'set.long': 'Show long words a little longer',
+    'set.paraStop': 'Stop after each paragraph',
+    'set.paraStop.help': 'Time to tell yourself the key point. Tap or press Space to continue.',
+    'set.display': 'Display',
+    'set.font': 'Font',
+    'set.serif': 'Serif',
+    'set.sans': 'Sans',
+    'set.size': 'Font size',
+    'set.size.out': '{p}%',
+    'set.mark': 'Highlight the focus letter in color',
+    'set.guides': 'Show fixation guides',
+    'set.keys': 'Keyboard',
+    'set.k.space': 'Space',
+    'set.k.space.d': 'start / pause',
+    'set.k.lr.d': 'previous / next sentence',
+    'set.k.shift.d': 'one word back / forward',
+    'set.k.ud.d': 'speed ±10 (with Shift ±50)',
+    'set.k.home': 'Home',
+    'set.k.home.d': 'back to the beginning',
+    'set.k.esc.d': 'close the panel',
+    'set.phone': 'On a phone: tap the reading window to start or pause. Swipe left for the next sentence, right for the previous one.',
+    'set.reset': 'Reset to defaults',
+    'drop.release': 'Drop to load',
+    'card.empty': 'No text loaded',
+    'card.empty.sub': 'Use “Load” to open a PDF or paste some text.',
+    'card.section': 'Section',
+    'card.para': 'End of paragraph',
+    'card.para.sub': 'Tell yourself the key point. Tap or press Space to continue.',
+    'card.end': 'End of text',
+    'card.end.stats': '{words} in {t}, {x} per minute on average.',
+    'card.end.count': '{words}.',
+    'u.word.one': '{n} word',
+    'u.word.other': '{n} words',
+    'u.page.one': '{n} page',
+    'u.page.other': '{n} pages',
+    'u.sent.one': '{n} sentence',
+    'u.sent.other': '{n} sentences',
+    'u.head.one': '{n} heading',
+    'u.head.other': '{n} headings',
+    't.storageFull': 'Your browser storage is full. This text is only kept while the page stays open.',
+    't.pdfLoading': 'Loading the PDF tool…',
+    't.pdfToolFail': 'The PDF tool could not be loaded. Reload the page or paste the text directly.',
+    't.pdfPassword': 'This PDF is password-protected. Unlock it first or paste the text.',
+    't.pdfOpenFail': 'This file could not be opened as a PDF.',
+    't.pdfPage': 'Reading page {p} of {n}…',
+    't.pdfReadFail': 'Something went wrong while reading the PDF.',
+    't.pdfScanned': 'This PDF contains almost no text, so it is probably a scan. {app} cannot recognize text in images (OCR).',
+    't.pdfNoText': 'No readable running text was found in this PDF.',
+    't.pdfLoaded': 'Loaded {words} from {pages}. Open “Text” to review what was imported.',
+    't.fileReadFail': 'The file could not be read.',
+    't.fileEmpty': 'The file is empty.',
+    't.fileLoaded': 'Loaded {words} from “{name}”.',
+    't.fileUnsupported': '{app} cannot read this format yet. Use a PDF, TXT or MD file, or paste the text.',
+    't.pasteEmpty': 'Paste some text first.',
+    't.pasteReady': '{words} ready. Tap “Read” or press Space.',
+    't.editEmpty': 'The text is empty.',
+    't.applied': 'Applied: {words}.',
+    't.copied': 'Text copied.',
+    't.copyFallback': 'Text selected. Copy it with Ctrl+C or ⌘+C.',
+    't.restored': 'Original restored. Click “Apply” to use it.',
+    't.recleaned': 'Cleaned up again. Click “Apply” to use it.',
+    't.defaults': 'Defaults restored.',
+    'foot.privacy': 'Your texts stay in your browser. Nothing is uploaded.',
+    'foot.legal': 'Legal notice',
+    'foot.privacyLink': 'Privacy'
+  },
+  de: {
+    'app.title': 'GOATreader · PDFs und Texte Wort für Wort lesen',
+    'doc.sampleChip': 'Beispiel',
+    'doc.untitled': 'Eigener Text',
+    'doc.file': 'Datei',
+    'sample.title': 'Was beim schnellen Lesen passiert',
+    'bar.lang': 'Sprache',
+    'bar.nav': 'Dokument',
+    'bar.load': 'Laden',
+    'bar.load.title': 'Text laden',
+    'bar.text': 'Text',
+    'bar.text.title': 'Text prüfen und bearbeiten',
+    'bar.speed': 'Tempo',
+    'bar.speed.title': 'Tempo und Anzeige einstellen',
+    'reader.region': 'Lesefenster',
+    'reader.label.paused': 'Lesefenster, pausiert. Leertaste oder Tippen startet.',
+    'reader.label.playing': 'Lesefenster, läuft. Leertaste oder Tippen pausiert.',
+    'eyebrow.section': 'Abschnitt',
+    'eyebrow.text': 'Text',
+    'eyebrow.start': 'Anfang',
+    'page.short': 'S. {p} / {n}',
+    'outline.page': 'S. {p}',
+    'outline.pct': '{p} %',
+    'marker.page': 'S.',
+    'ruler.label': 'Position im Text',
+    'ruler.valuetext': '{pct} Prozent, {pos}',
+    'meta.pos': 'Wort {i} von {n}',
+    'meta.left': 'noch {t}',
+    'meta.done': 'Fertig',
+    'tr.prev': 'Satz',
+    'tr.prev.title': 'Vorheriger Satz (←)',
+    'tr.prev.aria': 'Vorheriger Satz',
+    'tr.next': 'Satz',
+    'tr.next.title': 'Nächster Satz (→)',
+    'tr.next.aria': 'Nächster Satz',
+    'tr.play': 'Lesen',
+    'tr.pause': 'Pause',
+    'tr.restart': 'Von vorn',
+    'tr.play.aria': 'Lesen starten (Leertaste)',
+    'tr.pause.aria': 'Pause (Leertaste)',
+    'tempo.group': 'Tempo',
+    'tempo.slower': 'Langsamer (↓)',
+    'tempo.faster': 'Schneller (↑)',
+    'tempo.title': 'Eingestelltes Tempo pro Wort, ohne Pausen. Effektiv = mit allen Pausen.',
+    'tempo.unit': 'wpm',
+    'tempo.eff': '≈ {e} effektiv',
+    'ctx.label': 'Im Zusammenhang',
+    'ctx.hint': 'Wort antippen, um dorthin zu springen',
+    'keys': '<kbd>Leertaste</kbd> Start/Pause · <kbd>←</kbd> <kbd>→</kbd> vorheriger/nächster Satz · <kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd> einzelnes Wort · <kbd>↑</kbd> <kbd>↓</kbd> Tempo',
+    'close': 'Schließen',
+    'load.title': 'Text laden',
+    'load.choose': 'PDF-, TXT- oder Markdown-Datei wählen',
+    'load.drop': 'oder die Datei irgendwo auf diese Seite ziehen',
+    'load.note': 'Beim Laden einer PDF entfernt {app} Kopf- und Fußzeilen, Trennstriche am Zeilenende, Quellenverweise und das Literaturverzeichnis. Das lässt sich unter „Text“ anpassen.',
+    'load.paste': 'Text einfügen',
+    'load.paste.ph': 'Text hier einfügen. Leerzeilen trennen Absätze, Zeilen mit # am Anfang werden zu Überschriften.',
+    'load.paste.go': 'Diesen Text lesen',
+    'load.recent': 'Zuletzt gelesen',
+    'load.empty': 'Noch nichts gespeichert. Geladene Texte und deine Leseposition bleiben in diesem Browser.',
+    'load.sample': 'Beispieltext öffnen',
+    'lib.sub': '{words} · {p} % gelesen',
+    'lib.remove': 'Entfernen',
+    'lib.sure': 'Wirklich?',
+    'lib.remove.aria': '„{title}“ entfernen',
+    'edit.title': 'Text prüfen',
+    'edit.docTitle': 'Titel',
+    'edit.text': 'Text',
+    'edit.stats': '{words} · {sents} · {heads} · ca. {t} bei {wpm} wpm',
+    'edit.note': 'Leerzeilen trennen Absätze. Zeilen mit <code>#</code> am Anfang sind Überschriften. <code>⟦S.4⟧</code> markiert einen Seitenanfang.',
+    'edit.apply': 'Übernehmen',
+    'edit.copy': 'Text kopieren',
+    'edit.restore': 'Original wiederherstellen',
+    'clean.title': 'PDF-Bereinigung',
+    'clean.running': 'Kopf- und Fußzeilen, Seitenzahlen und Formelreste entfernen',
+    'clean.cites': 'Quellenverweise und Fußnotenziffern entfernen',
+    'clean.cites.help': 'z. B. [12] oder (Rayner et al., 2016)',
+    'clean.refs': 'Literaturverzeichnis und alles danach weglassen',
+    'clean.heads': 'Überschriften erkennen',
+    'clean.heads.help': 'für Gliederung und Abschnittsanzeige',
+    'clean.again': 'Neu bereinigen',
+    'clean.note': 'Gilt für die nächste PDF, die du lädst. Um eine PDF aus „Zuletzt gelesen“ neu zu bereinigen, lade die Datei noch einmal.',
+    'set.title': 'Tempo und Anzeige',
+    'set.speed': 'Tempo',
+    'set.wpm': 'Wörter pro Minute',
+    'set.wpm.out': '{wpm} wpm',
+    'set.eff': 'Effektiv ≈ {e} Wörter pro Minute für diesen Text, mit allen Pausen. Gesamtdauer ca. {t}.',
+    'set.preset.aria': '{v} Wörter pro Minute',
+    'set.ramp': 'Sanfter Start',
+    'set.ramp.help': 'Die ersten Wörter nach dem Start laufen etwas langsamer.',
+    'set.pauses': 'Pausen',
+    'set.sent': 'Am Satzende',
+    'set.clause': 'Nach Komma, Semikolon oder Doppelpunkt',
+    'set.para': 'Am Absatzende',
+    'set.pause.out': '+{x} × Wortdauer',
+    'set.pause.none': 'keine',
+    'set.long': 'Lange Wörter etwas länger zeigen',
+    'set.paraStop': 'Nach jedem Absatz anhalten',
+    'set.paraStop.help': 'Zeit, um dir die Kernaussage kurz selbst zu sagen. Weiter mit Tippen oder Leertaste.',
+    'set.display': 'Anzeige',
+    'set.font': 'Schrift',
+    'set.serif': 'Mit Serifen',
+    'set.sans': 'Ohne Serifen',
+    'set.size': 'Schriftgröße',
+    'set.size.out': '{p} %',
+    'set.mark': 'Fokusbuchstaben farbig markieren',
+    'set.guides': 'Fixierlinien zeigen',
+    'set.keys': 'Tastatur',
+    'set.k.space': 'Leertaste',
+    'set.k.space.d': 'Start / Pause',
+    'set.k.lr.d': 'vorheriger / nächster Satz',
+    'set.k.shift.d': 'ein Wort zurück / vor',
+    'set.k.ud.d': 'Tempo ±10 (mit Shift ±50)',
+    'set.k.home': 'Pos1',
+    'set.k.home.d': 'zum Anfang',
+    'set.k.esc.d': 'Seitenleiste schließen',
+    'set.phone': 'Auf dem Handy: Tippe aufs Lesefenster zum Starten und Pausieren. Wisch nach links für den nächsten Satz, nach rechts für den vorherigen.',
+    'set.reset': 'Standardwerte wiederherstellen',
+    'drop.release': 'Zum Laden loslassen',
+    'card.empty': 'Kein Text geladen',
+    'card.empty.sub': 'Unter „Laden“ öffnest du eine PDF oder fügst Text ein.',
+    'card.section': 'Abschnitt',
+    'card.para': 'Absatz zu Ende',
+    'card.para.sub': 'Sag dir kurz die Kernaussage. Weiter mit Tippen oder Leertaste.',
+    'card.end': 'Ende des Textes',
+    'card.end.stats': '{words} in {t}, im Schnitt {x} pro Minute.',
+    'card.end.count': '{words}.',
+    'u.word.one': '{n} Wort',
+    'u.word.other': '{n} Wörter',
+    'u.page.one': '{n} Seite',
+    'u.page.other': '{n} Seiten',
+    'u.sent.one': '{n} Satz',
+    'u.sent.other': '{n} Sätze',
+    'u.head.one': '{n} Überschrift',
+    'u.head.other': '{n} Überschriften',
+    't.storageFull': 'Dein Browser-Speicher ist voll. Dieser Text bleibt nur erhalten, solange die Seite offen ist.',
+    't.pdfLoading': 'PDF-Werkzeug wird geladen …',
+    't.pdfToolFail': 'Das PDF-Werkzeug ließ sich nicht laden. Lade die Seite neu oder füge den Text direkt ein.',
+    't.pdfPassword': 'Diese PDF ist passwortgeschützt. Entsperre sie zuerst oder füge den Text ein.',
+    't.pdfOpenFail': 'Diese Datei ließ sich nicht als PDF öffnen.',
+    't.pdfPage': 'Seite {p} von {n} wird gelesen …',
+    't.pdfReadFail': 'Beim Lesen der PDF ist ein Fehler aufgetreten.',
+    't.pdfScanned': 'In dieser PDF steckt kaum Text, vermutlich ist sie gescannt. {app} kann keinen Text in Bildern erkennen (OCR).',
+    't.pdfNoText': 'In dieser PDF wurde kein lesbarer Fließtext gefunden.',
+    't.pdfLoaded': '{words} aus {pages} geladen. Unter „Text“ kannst du prüfen, was importiert wurde.',
+    't.fileReadFail': 'Die Datei ließ sich nicht lesen.',
+    't.fileEmpty': 'Die Datei ist leer.',
+    't.fileLoaded': '{words} aus „{name}“ geladen.',
+    't.fileUnsupported': 'Dieses Format kann {app} noch nicht lesen. Nimm eine PDF-, TXT- oder MD-Datei oder füge den Text ein.',
+    't.pasteEmpty': 'Füge zuerst einen Text ein.',
+    't.pasteReady': '{words} bereit. Tippe auf „Lesen“ oder drück die Leertaste.',
+    't.editEmpty': 'Der Text ist leer.',
+    't.applied': 'Übernommen: {words}.',
+    't.copied': 'Text kopiert.',
+    't.copyFallback': 'Text markiert. Mit Strg+C oder ⌘+C kopieren.',
+    't.restored': 'Original wiederhergestellt. Mit „Übernehmen“ anwenden.',
+    't.recleaned': 'Neu bereinigt. Mit „Übernehmen“ anwenden.',
+    't.defaults': 'Standardwerte wiederhergestellt.',
+    'foot.privacy': 'Deine Texte bleiben in deinem Browser. Nichts wird hochgeladen.',
+    'foot.legal': 'Impressum',
+    'foot.privacyLink': 'Datenschutz'
+  }
+};
+
+const SAMPLE = {
+  en: `# What happens when you read fast
+
+Adults read silently at about 240 words per minute on average, and a little faster with fiction. Reading aloud, we manage around 180. So your inner voice isn't stuck at speaking speed. Research suggests it supports understanding rather than slowing you down.
+
+In normal reading, your eyes jump along the line. Each jump takes only 20 to 40 milliseconds. The real work happens in between, when your gaze rests on a word for 200 to 300 milliseconds and your brain processes it.
+
+# How ${APP} works
+
+${APP} shows you one word after another in the same spot. The colored letter marks the point where your gaze rests best. This saves you the jumps, but not the processing. The faster you read, the more understanding it costs.
+
+Two things help. Swipe right or press the left arrow key to jump back to the start of the sentence, just as your eyes jump back in normal reading when something is unclear. And as soon as you pause, you see the paragraph in context and can tap any word.
+
+Below the reading window you see two speeds. The speed you set applies to each word. The effective speed includes all pauses and shows how many words per minute actually reach you.
+
+# Loading your own texts
+
+Under “Load” you can open a PDF or paste some text. On a computer you can also drop a file onto this page. For papers, ${APP} removes headers and footers, line-break hyphens, in-text citations and the reference list. Before you read, you can check and correct the text under “Text”.`,
+  de: `# Was beim schnellen Lesen passiert
+
+Englischsprachige Erwachsene lesen still im Schnitt etwa 240 Wörter pro Minute, bei Romanen etwas mehr. Beim lauten Vorlesen sind es rund 180. Die innere Stimme ist also nicht ans Sprechtempo gebunden, und laut Forschung hilft sie eher beim Verstehen, als dass sie bremst. Im Deutschen liegen alle Werte etwas niedriger, weil die Wörter länger sind.
+
+Beim normalen Lesen springen die Augen über die Zeile. Ein Sprung dauert nur 20 bis 40 Millisekunden. Die eigentliche Arbeit passiert dazwischen, wenn der Blick 200 bis 300 Millisekunden auf einem Wort ruht und das Gehirn es verarbeitet.
+
+# So funktioniert ${APP}
+
+${APP} zeigt dir ein Wort nach dem anderen an derselben Stelle. Der farbige Buchstabe markiert den Punkt, an dem dein Blick am besten ruht. So sparst du die Sprünge, aber nicht die Verarbeitung. Je schneller du liest, desto mehr Verständnis kostet es.
+
+Zwei Dinge helfen dagegen. Wisch nach rechts oder drück die Pfeiltaste nach links, dann springst du an den Anfang des Satzes zurück, so wie die Augen beim normalen Lesen zurückspringen, wenn etwas unklar ist. Und sobald du pausierst, siehst du den Absatz im Zusammenhang und kannst jedes Wort antippen.
+
+Unter dem Lesefenster stehen zwei Tempowerte. Das eingestellte Tempo gilt pro Wort. Das effektive Tempo rechnet alle Pausen ein und zeigt, wie viele Wörter pro Minute wirklich ankommen.
+
+# Eigene Texte laden
+
+Unter „Laden“ öffnest du eine PDF oder fügst Text ein. Am Computer kannst du eine Datei auch einfach auf diese Seite ziehen. Bei Fachartikeln entfernt ${APP} Kopf- und Fußzeilen, Trennstriche am Zeilenende, Quellenverweise und das Literaturverzeichnis. Vor dem Lesen kannst du den Text unter „Text“ prüfen und korrigieren.`
+};
+
+let LANG = 'en';
+const LOCALE = { en: 'en-US', de: 'de-DE' };
+const PLURAL = { en: new Intl.PluralRules('en-US'), de: new Intl.PluralRules('de-DE') };
+const NF = { en: new Intl.NumberFormat('en-US'), de: new Intl.NumberFormat('de-DE') };
+const NF1 = {
+  en: new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 2 }),
+  de: new Intl.NumberFormat('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 2 })
+};
+const fmtN = n => NF[LANG].format(n);
+const fmt1 = n => NF1[LANG].format(n);
+function t(key, p) {
+  let s = I18N[LANG][key];
+  if (s == null) s = I18N.en[key];
+  if (s == null) return key;
+  s = s.replace(/\{app\}/g, APP);
+  return p ? s.replace(/\{(\w+)\}/g, (m, k) => (k in p ? String(p[k]) : m)) : s;
+}
+const unit = (u, n) => t(`u.${u}.${PLURAL[LANG].select(n) === 'one' ? 'one' : 'other'}`, { n: fmtN(n) });
+function applyStatic(root = document) {
+  root.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  root.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); }); // nur feste Texte aus I18N
+  root.querySelectorAll('[data-i18n-attr]').forEach(el => {
+    for (const pair of el.dataset.i18nAttr.split(';')) {
+      const i = pair.indexOf(':');
+      el.setAttribute(pair.slice(0, i).trim(), t(pair.slice(i + 1).trim()));
+    }
+  });
+}
+// ================= helpers =================
+const $ = (s, r = document) => r.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const median = a => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const debounce = (fn, ms) => { let tm = 0; return (...a) => { clearTimeout(tm); tm = setTimeout(() => fn(...a), ms); }; };
+function fmtDur(ms) {
+  const s = Math.max(0, Math.round(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
+  return h ? `${h}\u00a0h ${String(m).padStart(2, '0')}\u00a0min` : `${m}:${String(r).padStart(2, '0')}\u00a0min`;
+}
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } }
+};
+
+// ================= settings =================
+const K = { set: 'goatreader.settings.v1', lib: 'goatreader.library.v1', cur: 'goatreader.current.v1', pos: 'goatreader.positions.v1', lang: 'goatreader.lang' };
+// Einmalige Übernahme der Daten aus der früheren Version „Wortstrom“
+try {
+  if (localStorage.getItem(K.lib) == null && localStorage.getItem('wortstrom.library.v1') != null) {
+    for (const k of ['settings', 'library', 'current', 'positions']) {
+      const v = localStorage.getItem(`wortstrom.${k}.v1`);
+      if (v != null) localStorage.setItem(`goatreader.${k}.v1`, v);
+    }
+  }
+} catch { /* kein Speicher verfügbar */ }
+const DEFAULTS = { wpm: 300, sentPause: 1, clausePause: 0.4, paraPause: 1.5, longWords: true, ramp: true, paraStop: false,
+  font: 'serif', size: 1, mark: true, guides: true, dropRunning: true, dropCites: true, dropRefs: true, headings: true };
+const S = Object.assign({}, DEFAULTS);
+{ const saved = store.get(K.set, {}); if (saved && typeof saved === 'object') for (const k in DEFAULTS) if (typeof saved[k] === typeof DEFAULTS[k]) S[k] = saved[k]; }
+const saveSettings = debounce(() => store.set(K.set, S), 250);
+let POS = store.get(K.pos, {}); if (!POS || typeof POS !== 'object') POS = {};
+const savePosMap = debounce(() => store.set(K.pos, POS), 400);
+let LIB = store.get(K.lib, []); if (!Array.isArray(LIB)) LIB = [];
+
+// ================= text model =================
+const PAGE_TOKEN = /^⟦(?:[SsPp]\.)?(\d+)⟧$/;
+const PAGE_ANY = /⟦(?:[SsPp]\.)?(\d+)⟧/g;
+const ABBR = new Set(('z.b. bzw. ca. vgl. ggf. evtl. u.a. d.h. abb. tab. kap. nr. bd. hrsg. jh. mio. mrd. dr. prof. dipl. ing. st. str. ' +
+  'e.g. i.e. cf. vs. al. fig. figs. eq. eqs. sec. ch. chap. no. nos. vol. vols. pp. p. ed. eds. approx. resp. mr. mrs. ms. jr. sr. ' +
+  'inc. ltd. co. corp. jan. feb. mar. apr. jun. jul. aug. sep. sept. oct. okt. nov. dec. dez. bzgl. inkl. zzgl. gem. sog. ' +
+  'u.s. u.k. ph.d. m.sc. b.sc. o.ä. u.ä. z.t. i.d.r. s.o. s.u. seq. ff. a.a.o. ebd. anm.').split(' '));
+const END_RE = /[.!?…]["'”’»«)\]]*$/;
+const CLAUSE_RE = /[,;:–—]["'”’»«)\]]*$/;
+const WORDCHAR = /[\p{L}\p{N}]/u;
+
+function isSentenceEnd(tok, next) {
+  if (!END_RE.test(tok)) return false;
+  const core = tok.replace(/["'”’»«)\]]+$/, '');
+  if (/[!?…]$/.test(core)) return true;
+  const low = core.toLowerCase().replace(/^["'„“‚‘»«(\[]+/, '');
+  if (ABBR.has(low)) return false;
+  if (/^\p{L}\.$/u.test(low)) return false;                 // Initialen, "z. B."
+  if (/^(\p{L}{1,3}\.){2,}$/u.test(low)) return false;       // e.g., z.B., d.h.
+  if (next && /^\d{1,3}\.$/.test(low) && /^\p{L}/u.test(next)) return false; // "3. Mai"
+  if (next && /^\p{Ll}/u.test(next)) return false;           // klein weiter: kein Satzende
+  return true;
+}
+
+// Fokusbuchstabe nach der von Spritz bekannten Regel (gezählt werden nur Buchstaben/Ziffern)
+function orpIndex(w) {
+  const lead = w.match(/^[^\p{L}\p{N}]*/u)[0].length;
+  const trail = w.match(/[^\p{L}\p{N}]*$/u)[0].length;
+  const len = Math.max(1, w.length - lead - trail);
+  const k = len <= 1 ? 0 : len <= 5 ? 1 : len <= 9 ? 2 : len <= 13 ? 3 : 4;
+  let i = Math.min(w.length - 1, lead + k);
+  while (i < w.length - 1 && !WORDCHAR.test(w[i])) i++;
+  return i;
+}
+
+// Zeilen zusammenfügen, Silbentrennung am Zeilenende auflösen
+function joinLine(a, b) {
+  if (/\p{L}[-‐­]$/u.test(a)) {
+    if (/^(und|oder|bzw\.?|sowie|bis|als|and|or|nor|to)(\s|$)/i.test(b)) return a.replace(/­$/, '-') + ' ' + b; // "Lese- und …"
+    if (/^\p{Ll}/u.test(b)) return a.slice(0, -1) + b;                                                            // Trennung
+    return a.replace(/­$/, '') + b;                                                                          // "E-" + "Mail"
+  }
+  return a + ' ' + b;
+}
+
+function parseText(raw) {
+  const text = String(raw || '').normalize('NFKC').replace(/\r\n?/g, '\n').replace(/[   \t]/g, ' ');
+  const lines = text.split('\n');
+  const hasBlank = lines.some(l => !l.trim());
+  const blocks = [];
+  let buf = null;
+  const flush = () => { if (buf != null && buf.trim()) blocks.push({ h: false, text: buf }); buf = null; };
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) { flush(); continue; }
+    const hm = line.match(/^#{1,6}\s+(.+)$/);
+    if (hm) { flush(); blocks.push({ h: true, text: hm[1] }); continue; }
+    if (buf == null) { buf = line; continue; }
+    // ohne Leerzeilen: Zeilen, die mit Satzende aufhören, beenden den Absatz
+    if (!hasBlank && END_RE.test(buf)) { flush(); buf = line; continue; }
+    buf = joinLine(buf, line);
+  }
+  flush();
+
+  const tokens = [], paras = [], sents = [], heads = [], pages = [];
+  let pendingPage = null, words = 0;
+  const notePage = (pg, i) => { if (pg != null && (!pages.length || pages[pages.length - 1].page !== pg)) pages.push({ page: pg, i }); };
+  for (const b of blocks) {
+    if (b.h) {
+      const tx = b.text.replace(PAGE_ANY, (m, p) => { pendingPage = +p; return ' '; }).replace(/\s+/g, ' ').trim();
+      if (!tx) continue;
+      notePage(pendingPage, tokens.length); pendingPage = null;
+      heads.push({ text: tx, i: tokens.length });
+      paras.push(tokens.length); sents.push(tokens.length);
+      tokens.push({ kind: 'h', w: tx, nw: tx.split(' ').length, head: heads.length - 1, para: paras.length - 1, sent: sents.length - 1, wi: words });
+      continue;
+    }
+    const ws = [];
+    for (const r of b.text.split(/\s+/)) {
+      if (!r) continue;
+      const pm = r.match(PAGE_TOKEN);
+      if (pm) { pendingPage = +pm[1]; continue; }
+      if (!WORDCHAR.test(r)) { if (ws.length) ws[ws.length - 1].w += ' ' + r; continue; }
+      ws.push({ w: r, pg: pendingPage }); pendingPage = null;
+    }
+    if (!ws.length) continue;
+    paras.push(tokens.length);
+    let startSent = true;
+    for (let j = 0; j < ws.length; j++) {
+      const w = ws[j].w;
+      notePage(ws[j].pg, tokens.length);
+      if (startSent) { sents.push(tokens.length); startSent = false; }
+      const last = j === ws.length - 1;
+      const endSent = last || isSentenceEnd(w, ws[j + 1].w);
+      tokens.push({ kind: 'w', w, orp: orpIndex(w), letters: (w.match(/[\p{L}\p{N}]/gu) || []).length,
+        endSent, endClause: !endSent && CLAUSE_RE.test(w), endPara: last,
+        para: paras.length - 1, sent: sents.length - 1, head: heads.length - 1, wi: words });
+      words++;
+      if (endSent) startSent = true;
+    }
+  }
+  const pageCount = pages.reduce((m, p) => Math.max(m, p.page), 0);
+  return { tokens, paras, sents, heads, pages, words, pageCount };
+}
+
+// Anzeigedauer eines Tokens in ms
+function delayOf(tk) {
+  const base = 60000 / S.wpm;
+  if (tk.kind === 'h') return Math.max(800, base * (2.5 + tk.nw * 1.2));
+  let d = base;
+  if (S.longWords && tk.letters > 8) d *= 1 + Math.min(0.6, (tk.letters - 8) * 0.07);
+  if (tk.endSent) d += base * S.sentPause;
+  else if (tk.endClause) d += base * S.clausePause;
+  if (tk.endPara) d += base * S.paraPause;
+  return d;
+}
+const totalTime = model => model.tokens.reduce((s, tk) => s + delayOf(tk), 0);
+
+function titleFromText(text) {
+  const h = String(text).match(/^\s*#{1,6}\s+(.+)$/m);
+  const first = h ? h[1] : (String(text).trim().split('\n')[0] || '');
+  const tx = first.replace(PAGE_ANY, '').replace(/\s+/g, ' ').trim();
+  return tx.length > 70 ? tx.slice(0, 68).replace(/\s+\S*$/, '') + ' …' : (tx || t('doc.untitled'));
+}
+// ================= PDF import =================
+const PDFJS_LIB = 'vendor/pdfjs/pdf.min.js', PDFJS_WORKER = 'vendor/pdfjs/pdf.worker.min.js';
+let pdfjsPromise = null;
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src; s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => { s.remove(); reject(new Error(src)); };
+    document.head.appendChild(s);
+  });
+}
+function loadPdfJs() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (!pdfjsPromise) {
+    pdfjsPromise = loadScript(PDFJS_LIB).then(() => {
+      if (!window.pdfjsLib) throw new Error('pdfjs-unavailable');
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; // eigener Worker-Thread, alles vom selben Server
+      return window.pdfjsLib;
+    });
+    pdfjsPromise.catch(() => { pdfjsPromise = null; });
+  }
+  return pdfjsPromise;
+}
+
+// Textstücke einer Seite zu Zeilen bündeln (Reihenfolge des Inhaltsstroms bleibt erhalten)
+function buildLines(items, p, view) {
+  const vx = view[0], vy = view[1];
+  const lines = [];
+  let cur = null;
+  const flush = () => {
+    if (cur && cur.segs.some(g => g.t.trim())) {
+      const bySize = new Map();
+      for (const g of cur.segs) if (!g.sup) bySize.set(g.size, (bySize.get(g.size) || 0) + g.t.length);
+      let best = cur.size, bc = -1;
+      for (const [s, c] of bySize) if (c > bc) { bc = c; best = s; }
+      cur.size = best;
+      lines.push(cur);
+    }
+    cur = null;
+  };
+  for (const it of items) {
+    if (typeof it.str !== 'string') continue;
+    const tr = it.transform || [1, 0, 0, 1, 0, 0];
+    const [a, b, c, d] = tr;
+    if (Math.abs(b) > Math.abs(a) * 0.2 || Math.abs(c) > Math.abs(d) * 0.2) { if (it.hasEOL) flush(); continue; } // gedrehter Text (z. B. arXiv-Stempel)
+    if (!it.str) { if (it.hasEOL) flush(); continue; }
+    const size = Math.round((Math.abs(d) || Math.hypot(c, d) || it.height || 10) * 2) / 2;
+    const x = tr[4] - vx, y = tr[5] - vy, w = it.width || 0;
+    if (cur) {
+      const ref = Math.max(size, cur.size), dy = y - cur.y, gap = x - cur.x1;
+      const small = size < cur.size * 0.85;
+      const sameLine = Math.abs(dy) <= Math.max(1.5, 0.45 * ref) || (small && Math.abs(dy) < cur.size * 0.8 && gap > -cur.size);
+      if (!sameLine || gap > 1.3 * ref || gap < -2 * ref) flush();
+    }
+    if (!cur) cur = { p, x0: x, x1: x, y, size, segs: [] };
+    const gap = x - cur.x1;
+    const sup = cur.segs.length > 0 && size < cur.size * 0.85 && y - cur.y > cur.size * 0.12 && /^[\s\d,;–\-*†‡§]{1,12}$/.test(it.str);
+    cur.segs.push({ t: it.str, sup, space: cur.segs.length > 0 && gap > 0.12 * Math.min(size, cur.size), size });
+    cur.x0 = Math.min(cur.x0, x); cur.x1 = Math.max(cur.x1, x + w);
+    if (it.hasEOL) flush();
+  }
+  flush();
+  return lines;
+}
+
+function lineText(l, dropSup) {
+  let s = '';
+  for (const g of l.segs) {
+    if (g.sup && dropSup) continue;
+    if (g.space && s && !/\s$/.test(s) && !/^\s/.test(g.t)) s += ' ';
+    s += g.t;
+  }
+  return s.normalize('NFKC').replace(/\s+/g, ' ').trim();
+}
+
+const KEY_HEADS = /^(abstract|zusammenfassung|summary|kurzfassung|introduction|einleitung|einführung|background|hintergrund|related work|literature review|theoretical (background|framework)|theoretischer (hintergrund|rahmen)|theorie|methods?|methodology|methode|methoden|methodik|vorgehen|materials? and methods|material und methoden|data|daten|datengrundlage|experiments?( \d+)?|study \d+|studie \d+|results?|ergebnisse|findings|befunde|discussion|diskussion|general discussion|conclusions?|fazit|schluss(folgerung(en)?)?|ausblick|limitations?|limitationen|implications|future work|acknowledge?ments?|danksagung|appendix|anhang|references|bibliography|literature cited|works cited|reference list|literatur|literaturverzeichnis|quellen|quellenverzeichnis|keywords|schlüsselwörter|schlagwörter)$/i;
+const REF_HEADS = /^(references|bibliography|literature cited|works cited|reference list|literatur|literaturverzeichnis|quellen|quellenverzeichnis|literaturangaben)$/i;
+const NUM_HEAD = /^(?:\d{1,2}(?:\.\d{1,2}){0,3}\.?|[IVX]{1,6}\.|[A-H]\.)\s+(?=\p{L})/u;
+const PAGE_NO = /^(?:(?:page|seite|s\.|p\.)\s*)?(?:\d{1,4}|[ivxlc]{1,7})(?:\s*(?:of|von|\/|-|–)\s*\d{1,4})?$/i;
+const stripNum = s => s.replace(NUM_HEAD, '').replace(/[\s:.]+$/, '').trim();
+
+// Zitierklammern: [12], [3–5], (Rayner et al., 2016), (vgl. Müller 2018, S. 12); "Rayner (2016)" wird zu "Rayner"
+const NAME = "\\p{Lu}[\\p{L}'’\\-]+(?:\\s(?:van|von|de|der|den|du|di|da|le|la|ten)\\s\\p{Lu}[\\p{L}'’\\-]+)?";
+const AUTH = `${NAME}(?:\\set\\sal\\.|\\su\\.\\s?a\\.|,?\\s(?:and|&|und)\\s${NAME}|(?:,\\s${NAME})+,?\\s(?:and|&|und)\\s${NAME})?`;
+const YEAR = "(?:\\d{4}[a-z]?|n\\.\\s?d\\.|in press|im Druck|o\\.\\s?J\\.)(?:,\\s?\\d{4}[a-z]?)*";
+const LOC = "(?:,\\s?(?:p|pp|S|Kap|ch|chap)\\.\\s?\\d+(?:\\s?[-–]\\s?\\d+)?(?:\\s?f{1,2}\\.)?)?";
+const ONE = `(?:(?:e\\.\\s?g\\.,?|i\\.\\s?e\\.,?|see(?:\\salso)?|cf\\.|vgl\\.(?:\\sauch)?|siehe|z\\.\\s?B\\.)\\s)?${AUTH},?\\s${YEAR}${LOC}`;
+const CITE_AY = new RegExp(`\\s*\\((?:${ONE})(?:\\s?[;,]\\s?(?:${ONE}))*\\)`, 'gu');
+const CITE_NARR = new RegExp(`(et\\sal\\.|${NAME})\\s\\(\\d{4}[a-z]?(?:,\\s?\\d{4}[a-z]?)*${LOC}\\)`, 'gu');
+const CITE_NUM = /\s*\[\s*\d{1,3}[a-z]?(?:\s*[-–—,;]\s*\d{1,3}[a-z]?)*\s*\]/g;
+function stripCitations(s) {
+  return s.replace(CITE_NUM, '').replace(CITE_AY, '').replace(CITE_NARR, '$1')
+    .replace(/\(\s*[,;]?\s*\)/g, '').replace(/\s+([.,;:!?])(?=\s|$|["'”’»)\]])/g, '$1').replace(/\s{2,}/g, ' ').trim();
+}
+
+function weightedMedian(pairs) {
+  if (!pairs.length) return 0;
+  pairs.sort((a, b) => a[0] - b[0]);
+  const tot = pairs.reduce((s, p) => s + p[1], 0);
+  let acc = 0;
+  for (const [v, w] of pairs) { acc += w; if (acc >= tot / 2) return v; }
+  return pairs[pairs.length - 1][0];
+}
+
+function appendLine(para, tx, mark) {
+  if (!mark) return joinLine(para, tx);
+  if (/\p{L}[-‐­]$/u.test(para)) { // Trennung über den Seitenwechsel: Marke hinter das zusammengesetzte Wort
+    const sp = tx.indexOf(' ');
+    const first = sp < 0 ? tx : tx.slice(0, sp), rest = sp < 0 ? '' : tx.slice(sp + 1);
+    return joinLine(para, first) + ' ' + mark + (rest ? ' ' + rest : '');
+  }
+  return para + ' ' + mark + ' ' + tx;
+}
+
+function cleanPdf(raw, o) {
+  const pages = raw.pages, nP = pages.length;
+  const all = [];
+  for (const pg of pages) for (const l of pg.lines) {
+    l.text = lineText(l, o.dropCites); l.rel = l.y / pg.H; l.drop = !l.text; l.head = false; l.ref = false;
+    all.push(l);
+  }
+  const body = weightedMedian(all.filter(l => !l.drop).map(l => [l.size, l.text.length])) || 10;
+
+  // Kopf-/Fußzeilen, Seitenzahlen, Zahlen- und Formelreste
+  if (o.dropRunning) {
+    const zone = l => l.rel > 0.9 || l.rel < 0.08;
+    const norm = s => s.toLowerCase().replace(/\d+/g, '#').replace(/[^\p{L}#]+/gu, ' ').trim();
+    const count = new Map();
+    for (const pg of pages) {
+      const seen = new Set();
+      for (const l of pg.lines) if (!l.drop && zone(l)) {
+        const k = norm(l.text);
+        if (k && !seen.has(k)) { seen.add(k); count.set(k, (count.get(k) || 0) + 1); }
+      }
+    }
+    const minRep = nP >= 3 ? Math.max(2, Math.ceil(nP * 0.25)) : 2;
+    for (const l of all) {
+      if (l.drop) continue;
+      const tx = l.text;
+      if (zone(l) && (PAGE_NO.test(tx) || (nP >= 2 && (count.get(norm(tx)) || 0) >= minRep))) { l.drop = true; continue; }
+      if (/^[\d\s.,()]+$/.test(tx) && tx.length < 10) { l.drop = true; continue; }
+      const letters = (tx.match(/\p{L}/gu) || []).length;
+      if (tx.length >= 4 && letters / tx.length < 0.4) l.drop = true;
+    }
+  }
+
+  // Spalten: Reihenfolge nur korrigieren, wenn der Inhaltsstrom zwischen den Spalten hin und her springt
+  for (const pg of pages) {
+    const ls = pg.lines.filter(l => !l.drop), W = pg.W;
+    const isL = l => l.x0 < W * 0.44 && l.x1 <= W * 0.56, isR = l => l.x0 >= W * 0.44;
+    // Spaltenblock über breite Spaltenzeilen bestimmen; kurze Zeilen darüber (Titel, Abstract) gehören zur vollen Breite
+    const core = ls.filter(l => (isL(l) || isR(l)) && l.x1 - l.x0 > W * 0.25);
+    const blockTop = core.length ? Math.max(...core.map(l => l.y)) + body * 3 : -Infinity;
+    const blockBottom = core.length ? Math.min(...core.map(l => l.y)) - body * 3 : Infinity;
+    let nl = 0, nr = 0, flips = 0, prev = null;
+    for (const l of ls) {
+      l.side = l.y <= blockTop && l.y >= blockBottom ? (isR(l) ? 'R' : isL(l) ? 'L' : 'F') : 'F';
+      if (l.side === 'F') continue;
+      if (l.side === 'L') nl++; else nr++;
+      if (prev && l.side !== prev) flips++;
+      prev = l.side;
+    }
+    const twoCol = nl >= 4 && nr >= 4;
+    if (twoCol && flips > Math.max(4, 0.3 * Math.min(nl, nr))) {
+      const colTop = Math.max(...ls.filter(l => l.side !== 'F').map(l => l.y));
+      const byY = (a, b) => b.y - a.y || a.x0 - b.x0;
+      pg.order = [
+        ...ls.filter(l => l.side === 'F' && l.y > colTop).sort(byY),
+        ...ls.filter(l => l.side === 'L').sort(byY),
+        ...ls.filter(l => l.side === 'R').sort(byY),
+        ...ls.filter(l => l.side === 'F' && l.y <= colTop).sort(byY)
+      ];
+    } else pg.order = ls;
+    // Spaltenränder und typischer Zeilenabstand
+    const key = l => (twoCol ? l.side : 'all');
+    const right = new Map(), left = new Map();
+    for (const l of ls) {
+      if (Math.abs(l.size - body) > 1.5) continue;
+      const k = key(l);
+      right.set(k, Math.max(right.get(k) ?? -Infinity, l.x1));
+      left.set(k, Math.min(left.get(k) ?? Infinity, l.x0));
+    }
+    for (const l of ls) {
+      const k = key(l);
+      l.colRight = right.get(k) ?? right.get('F') ?? l.x1;
+      l.colLeft = left.get(k) ?? l.x0;
+    }
+    const gaps = [];
+    for (let i = 1; i < pg.order.length; i++) {
+      const a = pg.order[i - 1], b = pg.order[i], g = a.y - b.y;
+      if (g > 0 && g < 3 * body && Math.abs(a.x0 - b.x0) < body * 6) gaps.push(g);
+    }
+    pg.lineGap = median(gaps) || body * 1.2;
+  }
+
+  // Überschriften
+  for (const pg of pages) for (const l of pg.order) {
+    const tx = l.text, nw = tx.split(' ').length, plain = stripNum(tx);
+    if (nw <= 4 && REF_HEADS.test(plain)) { l.head = true; l.ref = true; continue; }
+    if (!o.headings || nw > 16 || tx.length > 160) continue;
+    const big = l.size >= body * 1.12 && !/[,;]$/.test(tx) && /\p{L}{2}/u.test(tx);
+    const key = KEY_HEADS.test(plain);
+    const numbered = NUM_HEAD.test(tx) && nw <= 10 && !/[.,;:]$/.test(tx) && /^\p{Lu}/u.test(plain) && (l.x1 - l.x0) < (l.colRight - l.colLeft) * 0.85;
+    l.head = big || key || numbered;
+  }
+
+  // Absätze zusammensetzen
+  const prefix = t('marker.page');
+  const blocks = [];
+  let para = null, prev = null, stop = false;
+  const pushPara = () => { if (para && para.trim()) blocks.push({ h: false, text: para }); para = null; };
+  for (const pg of pages) {
+    if (stop) break;
+    let mark = `⟦${prefix}${pg.p}⟧`;
+    for (const l of pg.order) {
+      if (l.drop) continue;
+      const tx = l.text;
+      if (l.head) {
+        if (l.ref && o.dropRefs) { stop = true; break; }
+        const last = blocks[blocks.length - 1];
+        if (para == null && last && last.h && prev && prev.head && prev.p === l.p && prev.y - l.y < prev.size * 2.4 &&
+            Math.abs(prev.size - l.size) <= 1 && !NUM_HEAD.test(tx) && !KEY_HEADS.test(stripNum(tx))) {
+          last.text = joinLine(last.text, tx); prev = l; continue; // mehrzeilige Überschrift
+        }
+        pushPara();
+        blocks.push({ h: true, text: (mark ? mark + ' ' : '') + tx, size: l.size, p: l.p });
+        mark = ''; prev = l; continue;
+      }
+      if (para == null || (prev && prev.head)) {
+        pushPara(); para = (mark ? mark + ' ' : '') + tx; mark = ''; prev = l; continue;
+      }
+      const flowJump = prev.p !== l.p || l.y > prev.y + prev.size * 0.5;
+      const endsSentence = /[.!?:]["'”’»)\]]*$/.test(prev.text);
+      const prevShort = prev.x1 < prev.colRight - body * 2.5;
+      const indented = l.x0 > l.colLeft + body * 0.8 && l.x0 < l.colLeft + body * 6;
+      const brk = flowJump
+        ? endsSentence && (prevShort || indented)
+        : (prev.y - l.y) > pg.lineGap * 1.55 || (endsSentence && (prevShort || indented));
+      if (brk) { pushPara(); para = (mark ? mark + ' ' : '') + tx; }
+      else para = appendLine(para, tx, mark);
+      mark = ''; prev = l;
+    }
+  }
+  pushPara();
+  if (o.dropCites) for (const b of blocks) if (!b.h) b.text = stripCitations(b.text);
+
+  let title = (raw.metaTitle || '').replace(/\s+/g, ' ').trim();
+  if (title.length < 6 || title.length > 220 || /^(untitled|unbenannt|microsoft word|document\d*)|\.(docx?|tex|pdf|indd|rtf)$/i.test(title)) title = '';
+  if (!title) {
+    const cands = blocks.filter(b => b.h && b.p === 1).sort((a, b) => b.size - a.size);
+    if (cands.length && cands[0].size >= body * 1.25) title = cands[0].text.replace(PAGE_ANY, '').replace(/\s+/g, ' ').trim();
+  }
+  if (!title) title = raw.fileTitle || 'PDF';
+  return {
+    text: blocks.map(b => (b.h ? '# ' : '') + b.text).join('\n\n'),
+    title: title.length > 160 ? title.slice(0, 158) + ' …' : title
+  };
+}
+
+async function importPdf(file, fileTitle) {
+  busy(t('t.pdfLoading'));
+  let lib;
+  try { lib = await loadPdfJs(); }
+  catch { toast(t('t.pdfToolFail'), 'error', 7000); return; }
+  let pdf;
+  try {
+    const data = new Uint8Array(await file.arrayBuffer());
+    pdf = await lib.getDocument({ data, isEvalSupported: false, disableFontFace: true, verbosity: 0 }).promise;
+  } catch (err) {
+    toast(t(err && err.name === 'PasswordException' ? 't.pdfPassword' : 't.pdfOpenFail'), 'error', 7000);
+    return;
+  }
+  const n = pdf.numPages, pages = [];
+  let chars = 0;
+  try {
+    for (let p = 1; p <= n; p++) {
+      busy(t('t.pdfPage', { p: fmtN(p), n: fmtN(n) }));
+      const page = await pdf.getPage(p);
+      const tc = await page.getTextContent();
+      const view = page.view;
+      const lines = buildLines(tc.items, p, view);
+      for (const l of lines) for (const g of l.segs) chars += g.t.length;
+      pages.push({ p, W: view[2] - view[0], H: view[3] - view[1], lines });
+      page.cleanup();
+    }
+  } catch {
+    toast(t('t.pdfReadFail'), 'error', 7000);
+    try { pdf.destroy(); } catch {}
+    return;
+  }
+  let metaTitle = '';
+  try { const meta = await pdf.getMetadata(); metaTitle = String(meta?.info?.Title || ''); } catch {}
+  try { pdf.destroy(); } catch {}
+  if (chars < 30 * n) { toast(t('t.pdfScanned'), 'error', 8000); return; }
+  const raw = { pages, metaTitle, fileTitle };
+  const res = cleanPdf(raw, S);
+  if (!res.text.trim()) { toast(t('t.pdfNoText'), 'error', 7000); return; }
+  openDoc({ id: newId(), title: res.title, source: 'pdf', text: res.text, original: res.text, raw, pos: 0 });
+  toast(t('t.pdfLoaded', { words: unit('word', M.words), pages: unit('page', n) }), 'info', 6500);
+}
+// ================= state =================
+let D = null;                     // aktuelles Dokument
+let M = null;                     // geparstes Modell
+let cum = new Float64Array(1);    // aufsummierte Anzeigedauern
+let pos = 0;
+let playing = false, timer = 0, nextAt = 0, rampLeft = 0, playT0 = 0;
+let session = { ms: 0, words: 0 };
+let stopNote = null;              // 'para' | 'end' | null
+let curHead = -2;
+const FOCAL = 0.38;               // entspricht --focal
+const canStore = store.set('goatreader.probe', 1);
+const newId = () => 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+{
+  // Sprache: ?lang=de|en in der Adresse hat Vorrang und wird gemerkt, sonst die gespeicherte Wahl, sonst Englisch
+  let q = '';
+  try { q = (new URLSearchParams(location.search).get('lang') || '').toLowerCase(); } catch { /* keine Adresse */ }
+  if (I18N[q]) { LANG = q; store.set(K.lang, q); }
+  else { const l = store.get(K.lang, null); LANG = I18N[l] ? l : 'en'; }
+}
+
+const el = {
+  docTitle: $('#doc-title'), docChip: $('#doc-chip'), reader: $('#reader'), word: $('#word'),
+  pre: $('#w-pre'), orp: $('#w-orp'), post: $('#w-post'), card: $('#card'),
+  sectionBtn: $('#section-btn'), sectionLabel: $('#section-label'), sectionName: $('#section-name'), pageLabel: $('#page-label'), outline: $('#outline'),
+  ruler: $('#ruler'), rulerFill: $('#ruler-fill'), rulerTicks: $('#ruler-ticks'), rulerThumb: $('#ruler-thumb'),
+  metaPos: $('#meta-pos'), metaLeft: $('#meta-left'),
+  play: $('#btn-play'), playLabel: $('#play-label'), icPlay: $('#ic-play'), icPause: $('#ic-pause'), prev: $('#btn-prev'), next: $('#btn-next'),
+  wpmOut: $('#wpm-out'), effOut: $('#eff-out'), wpmUp: $('#wpm-up'), wpmDown: $('#wpm-down'),
+  ctxSection: $('#context-section'), ctxText: $('#context-text'),
+  toast: $('#toast'), scrim: $('#scrim'), drop: $('#drop-overlay')
+};
+
+// ================= messages =================
+let toastTimer = 0;
+function toast(msg, kind = 'info', ms = 4500) {
+  el.toast.textContent = msg; el.toast.dataset.kind = kind; el.toast.hidden = false;
+  clearTimeout(toastTimer);
+  if (ms) toastTimer = setTimeout(() => { el.toast.hidden = true; }, ms);
+}
+const busy = msg => toast(msg, 'busy', 0);
+
+// ================= documents =================
+const posKey = d => (d.id === 'sample' ? 'sample.' + LANG : d.id);
+function saveLib() {
+  if (!canStore) return;
+  let ok = store.set(K.lib, LIB);
+  while (!ok && LIB.length > 1) { LIB.pop(); ok = store.set(K.lib, LIB); }
+  if (!ok) toast(t('t.storageFull'), 'error', 6000);
+}
+function rememberDoc(d) {
+  store.set(K.cur, d.id);
+  if (d.id === 'sample') return;
+  const rec = { id: d.id, title: d.title, source: d.source, text: d.text, words: M.words, tokens: M.tokens.length, updatedAt: Date.now() };
+  if (d.original && d.original !== d.text && d.original.length < 300000) rec.original = d.original;
+  LIB = [rec, ...LIB.filter(x => x.id !== d.id)].slice(0, 12);
+  for (const id of Object.keys(POS)) if (!id.startsWith('sample') && !LIB.some(x => x.id === id)) delete POS[id];
+  saveLib();
+}
+const docFromRec = r => ({ id: r.id, title: r.title, source: r.source, text: r.text, original: r.original || r.text, pos: POS[r.id] || 0 });
+const sampleDoc = () => ({ id: 'sample', title: t('sample.title'), source: 'sample', text: SAMPLE[LANG], original: SAMPLE[LANG], pos: POS['sample.' + LANG] || 0 });
+function savePos() {
+  if (!D || !M || !M.tokens.length) return;
+  POS[posKey(D)] = clamp(pos, 0, M.tokens.length - 1);
+  if (canStore) savePosMap();
+}
+
+function openDoc(doc) {
+  if (playing) pause();
+  D = doc; stopNote = null; session = { ms: 0, words: 0 }; curHead = -2;
+  M = parseText(D.text);
+  pos = clamp(doc.pos || 0, 0, Math.max(0, M.tokens.length - 1));
+  computeTimes();
+  el.docTitle.textContent = D.title; el.docTitle.title = D.title;
+  el.docChip.hidden = D.id !== 'sample';
+  buildRuler(); buildOutline();
+  render(pos); renderContext(); syncPlay();
+  rememberDoc(D);
+}
+
+// ================= timing =================
+function computeTimes() {
+  const n = M.tokens.length;
+  cum = new Float64Array(n + 1);
+  for (let i = 0; i < n; i++) cum[i + 1] = cum[i] + delayOf(M.tokens[i]);
+  updateTempo();
+}
+const effWpm = () => { const tot = cum[M.tokens.length]; return tot > 0 && M.words ? M.words / (tot / 60000) : S.wpm; };
+function updateTempo() {
+  const e = Math.round(effWpm());
+  el.wpmOut.textContent = S.wpm;
+  el.effOut.textContent = t('tempo.eff', { e: fmtN(e) });
+  $('#eff-help').textContent = t('set.eff', { e: fmtN(e), t: fmtDur(cum[M.tokens.length]) });
+  const r = $('#wpm-range'); if (+r.value !== S.wpm) r.value = S.wpm;
+  $('#wpm-range-out').textContent = t('set.wpm.out', { wpm: S.wpm });
+  updateMeta();
+}
+function setWpm(v) {
+  S.wpm = clamp(Math.round(v / 10) * 10, 100, 1000);
+  saveSettings(); computeTimes();
+}
+
+// ================= rendering =================
+function showCard(title, sub, kicker) {
+  el.word.hidden = true; el.card.hidden = false; el.card.replaceChildren();
+  if (kicker) { const k = document.createElement('span'); k.className = 'label'; k.textContent = kicker; el.card.append(k); }
+  const h = document.createElement('div'); h.className = 't'; h.textContent = title; el.card.append(h);
+  if (sub) { const s = document.createElement('div'); s.className = 's'; s.textContent = sub; el.card.append(s); }
+}
+const showParaCard = () => showCard(t('card.para'), t('card.para.sub'));
+function place() {
+  if (el.word.hidden) return;
+  const W = el.reader.clientWidth; if (!W) return;
+  const fx = W * FOCAL, pad = 12;
+  const center = el.orp.offsetLeft + el.orp.offsetWidth / 2;
+  const total = el.word.offsetWidth;
+  const s = Math.min(1, (fx - pad) / Math.max(1, center), (W - fx - pad) / Math.max(1, total - center));
+  el.word.style.transform = `translate(${(fx - center * s).toFixed(1)}px, -50%) scale(${s.toFixed(3)})`;
+}
+function render(i) {
+  const n = M.tokens.length;
+  if (!n) { showCard(t('card.empty'), t('card.empty.sub')); updateMeta(); return; }
+  const tk = M.tokens[clamp(i, 0, n - 1)];
+  if (tk.kind === 'h') showCard(tk.w, '', t('card.section'));
+  else {
+    el.card.hidden = true; el.word.hidden = false;
+    el.pre.textContent = tk.w.slice(0, tk.orp);
+    el.orp.textContent = tk.w.charAt(tk.orp);
+    el.post.textContent = tk.w.slice(tk.orp + 1);
+    place();
+  }
+  updateMeta();
+}
+function pageAt(i) {
+  const P = M.pages;
+  if (!P.length) return 0;
+  if (i < P[0].i) return P[0].page;
+  let lo = 0, hi = P.length - 1, ans = P[0].page;
+  while (lo <= hi) { const mid = (lo + hi) >> 1; if (P[mid].i <= i) { ans = P[mid].page; lo = mid + 1; } else hi = mid - 1; }
+  return ans;
+}
+function updateMeta() {
+  const n = M.tokens.length;
+  if (!n) { el.metaPos.textContent = ''; el.metaLeft.textContent = ''; el.pageLabel.hidden = true; return; }
+  const atEnd = pos >= n, i = clamp(pos, 0, n - 1), tk = M.tokens[i];
+  const wordNo = atEnd ? M.words : Math.min(M.words, tk.wi + 1);
+  el.metaPos.textContent = t('meta.pos', { i: fmtN(wordNo), n: fmtN(M.words) });
+  el.metaLeft.textContent = atEnd ? t('meta.done') : t('meta.left', { t: fmtDur(cum[n] - cum[i]) });
+  const f = atEnd ? 1 : (n > 1 ? i / (n - 1) : 0), pct = (f * 100).toFixed(2) + '%';
+  el.rulerFill.style.width = pct; el.rulerThumb.style.left = pct;
+  el.ruler.setAttribute('aria-valuenow', String(Math.round(f * 100)));
+  el.ruler.setAttribute('aria-valuetext', t('ruler.valuetext', { pct: Math.round(f * 100), pos: el.metaPos.textContent }));
+  const pg = pageAt(i);
+  el.pageLabel.hidden = !pg;
+  if (pg) el.pageLabel.textContent = t('page.short', { p: fmtN(pg), n: fmtN(M.pageCount) });
+  if (tk.head !== curHead) {
+    curHead = tk.head;
+    el.sectionLabel.textContent = t(M.heads.length ? 'eyebrow.section' : 'eyebrow.text');
+    el.sectionName.textContent = M.heads.length ? (tk.head >= 0 ? M.heads[tk.head].text : t('eyebrow.start')) : D.title;
+    el.outline.querySelectorAll('button').forEach((b, k) => b.classList.toggle('active', k === tk.head));
+  }
+}
+function buildRuler() {
+  el.rulerTicks.replaceChildren();
+  const n = M.tokens.length;
+  if (n < 2) return;
+  const frag = document.createDocumentFragment();
+  for (const p of M.pages) {
+    if (p.i === 0) continue;
+    const d = document.createElement('div'); d.className = 'pg'; d.style.left = (p.i / (n - 1) * 100) + '%'; d.title = t('outline.page', { p: fmtN(p.page) }); frag.append(d);
+  }
+  for (const h of M.heads) {
+    if (h.i === 0) continue;
+    const d = document.createElement('div'); d.className = 'sec'; d.style.left = (h.i / (n - 1) * 100) + '%'; d.title = h.text; frag.append(d);
+  }
+  el.rulerTicks.append(frag);
+}
+function buildOutline() {
+  el.outline.replaceChildren(); el.outline.hidden = true;
+  el.sectionBtn.setAttribute('aria-expanded', 'false');
+  el.sectionBtn.disabled = !M.heads.length;
+  M.heads.forEach(h => {
+    const b = document.createElement('button'); b.type = 'button';
+    const a = document.createElement('span'); a.textContent = h.text;
+    const g = document.createElement('span'); g.className = 'pg';
+    const p = pageAt(h.i);
+    g.textContent = p ? t('outline.page', { p: fmtN(p) }) : t('outline.pct', { p: Math.round(h.i / Math.max(1, M.tokens.length - 1) * 100) });
+    b.append(a, g);
+    b.addEventListener('click', () => { toggleOutline(false); goTo(h.i); el.reader.focus(); });
+    el.outline.append(b);
+  });
+}
+function toggleOutline(show) {
+  const on = show ?? el.outline.hidden;
+  if (on && (!M.heads.length || playing)) return;
+  el.outline.hidden = !on;
+  el.sectionBtn.setAttribute('aria-expanded', String(on));
+  if (on) {
+    const a = el.outline.querySelector('.active') || el.outline.querySelector('button');
+    a?.focus(); a?.scrollIntoView({ block: 'nearest' });
+  }
+}
+function renderContext() {
+  el.ctxText.replaceChildren();
+  const n = M.tokens.length;
+  if (!n) { el.ctxSection.hidden = true; return; }
+  let i = clamp(pos, 0, n - 1);
+  if (stopNote === 'para' && i > 0) i -= 1;   // gerade beendeten Absatz zeigen
+  const tk = M.tokens[i];
+  const head = tk.head >= 0 ? M.heads[tk.head] : null;
+  el.ctxSection.hidden = !head;
+  if (head) el.ctxSection.textContent = head.text;
+  let para = tk.para;
+  if (tk.kind === 'h' && para + 1 < M.paras.length) para += 1;   // bei einer Überschrift den folgenden Absatz zeigen
+  const pStart = M.paras[para], pEnd = (para + 1 < M.paras.length ? M.paras[para + 1] : n) - 1;
+  let a = pStart, b = pEnd;
+  const WIN = 160;
+  if (b - a > WIN * 2) { a = Math.max(pStart, i - WIN); b = Math.min(pEnd, a + WIN * 2); }
+  const frag = document.createDocumentFragment();
+  if (a > pStart) { const g = document.createElement('span'); g.className = 'gap'; g.textContent = '… '; frag.append(g); }
+  for (let k = a; k <= b; k++) {
+    const w = M.tokens[k];
+    if (w.kind !== 'w') continue;
+    const s = document.createElement('span');
+    s.textContent = w.w; s.dataset.i = k;
+    if (k === pos && !stopNote) s.className = 'cur';
+    frag.append(s, ' ');
+  }
+  if (b < pEnd) { const g = document.createElement('span'); g.className = 'gap'; g.textContent = '…'; frag.append(g); }
+  el.ctxText.append(frag);
+  const cur = el.ctxText.querySelector('.cur');
+  if (cur) {
+    const box = el.ctxText, top = cur.offsetTop - box.offsetTop;
+    if (top < box.scrollTop || top > box.scrollTop + box.clientHeight - 32) box.scrollTop = Math.max(0, top - box.clientHeight / 3);
+  } else el.ctxText.scrollTop = 0;
+}
+
+// ================= playback =================
+function syncPlay() {
+  const n = M ? M.tokens.length : 0;
+  el.icPlay.hidden = playing; el.icPause.hidden = !playing;
+  el.playLabel.textContent = playing ? t('tr.pause') : (n && pos >= n ? t('tr.restart') : t('tr.play'));
+  el.play.setAttribute('aria-label', playing ? t('tr.pause.aria') : t('tr.play.aria'));
+  el.play.disabled = !n;
+  document.body.classList.toggle('is-playing', playing);
+  el.reader.setAttribute('aria-label', t(playing ? 'reader.label.playing' : 'reader.label.paused'));
+}
+function play() {
+  if (playing || !M.tokens.length) return;
+  if (pos >= M.tokens.length) { pos = 0; session = { ms: 0, words: 0 }; }
+  stopNote = null; playing = true;
+  rampLeft = S.ramp ? 10 : 0;
+  nextAt = performance.now(); playT0 = nextAt;
+  toggleOutline(false);
+  syncPlay(); wake(true); step();
+}
+function pause() {
+  if (!playing) return;
+  playing = false; clearTimeout(timer);
+  session.ms += performance.now() - playT0;
+  syncPlay(); wake(false);
+  if (stopNote === 'para') showParaCard();
+  else if (stopNote !== 'end') render(pos);
+  renderContext(); savePos();
+}
+const toggle = () => (playing ? pause() : play());
+function step() {
+  if (!playing) return;
+  render(pos);
+  let d = delayOf(M.tokens[pos]);
+  if (rampLeft > 0) { d *= 1 + 0.6 * (rampLeft / 10); rampLeft--; }
+  const now = performance.now();
+  nextAt = Math.max(nextAt, now - 120) + d;   // Drift ausgleichen, nach Hängern nicht hinterherhetzen
+  timer = setTimeout(advance, Math.max(0, nextAt - now));
+}
+function advance() {
+  if (!playing) return;
+  const tk = M.tokens[pos], n = M.tokens.length;
+  if (tk.kind === 'w') session.words++;
+  if (pos >= n - 1) { pos = n; stopNote = 'end'; pause(); showEnd(); return; }
+  pos++;
+  if (S.paraStop && tk.endPara) { stopNote = 'para'; pause(); return; }
+  if (pos % 40 === 0) savePos();
+  step();
+}
+function showEnd() {
+  const { words, ms } = session;
+  const sub = words >= 20 && ms > 3000
+    ? t('card.end.stats', { words: unit('word', words), t: fmtDur(ms), x: fmtN(Math.round(words / (ms / 60000))) })
+    : t('card.end.count', { words: unit('word', M.words) });
+  showCard(t('card.end'), sub);
+  updateMeta(); syncPlay();
+}
+function goTo(i) {
+  const n = M.tokens.length;
+  if (!n) return;
+  pos = clamp(i, 0, n - 1); stopNote = null;
+  if (playing) { clearTimeout(timer); rampLeft = S.ramp ? 6 : 0; nextAt = performance.now(); step(); }
+  else { render(pos); renderContext(); savePos(); syncPlay(); }
+}
+function prevSentence() {
+  const n = M.tokens.length;
+  if (!n) return;
+  const i = clamp(pos, 0, n - 1), s = M.tokens[i].sent, start = M.sents[s];
+  // Am Satzanfang (beim Lesen: in den ersten zwei Wörtern) geht es einen Satz weiter zurück
+  const atStart = pos < n && i - start <= (playing ? 2 : 0);
+  goTo(atStart && s > 0 ? M.sents[s - 1] : start);
+}
+function nextSentence() {
+  const n = M.tokens.length;
+  if (!n) return;
+  const s = M.tokens[clamp(pos, 0, n - 1)].sent;
+  if (s + 1 < M.sents.length) goTo(M.sents[s + 1]);
+}
+function stepWord(d) {
+  if (!M.tokens.length) return;
+  if (playing) pause();
+  goTo(clamp(pos, 0, M.tokens.length - 1) + d);
+}
+
+let wakeLock = null;
+async function wake(on) {
+  try {
+    if (on && !wakeLock && navigator.wakeLock) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener?.('release', () => { wakeLock = null; });
+      if (!playing) wake(false);
+    } else if (!on && wakeLock) { const w = wakeLock; wakeLock = null; await w.release(); }
+  } catch { wakeLock = null; }
+}
+
+// ================= language =================
+function setLang(l) {
+  const next = I18N[l] ? l : 'en';
+  if (next === LANG) return;
+  LANG = next;
+  store.set(K.lang, LANG);
+  document.documentElement.lang = LANG;
+  document.title = t('app.title');
+  applyStatic();
+  document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === LANG)));
+  for (const b of $('#presets').children) b.setAttribute('aria-label', t('set.preset.aria', { v: b.textContent }));
+  if (D && D.id === 'sample') {
+    // Beispieltext in der neuen Sprache öffnen, Position anteilig übernehmen
+    const frac = M.tokens.length > 1 ? clamp(pos, 0, M.tokens.length - 1) / (M.tokens.length - 1) : 0;
+    const doc = sampleDoc(), m2 = parseText(doc.text);
+    const i = Math.round(frac * Math.max(0, m2.tokens.length - 1));
+    doc.pos = m2.tokens.length ? m2.sents[m2.tokens[i].sent] : 0;
+    openDoc(doc);
+  } else {
+    curHead = -2;
+    updateTempo(); buildRuler(); buildOutline();
+    if (stopNote === 'end') showEnd(); else if (stopNote === 'para') showParaCard(); else render(pos);
+    renderContext(); syncPlay();
+  }
+  updateSettingOutputs();
+  if (openName === 'load') renderLibrary();
+  if (openName === 'edit') updateEditStats();
+}
+document.querySelectorAll('.lang button').forEach(b => b.addEventListener('click', e => {
+  setLang(b.dataset.lang);
+  if (e.detail > 0) b.blur();
+}));
+
+// ================= interaction: reader, ruler, buttons =================
+let swipe = null;
+el.reader.addEventListener('pointerdown', e => { if (e.button === 0 || e.pointerType !== 'mouse') swipe = { x: e.clientX, y: e.clientY }; });
+el.reader.addEventListener('pointercancel', () => { swipe = null; });
+el.reader.addEventListener('pointerup', e => {
+  if (!swipe) return;
+  const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y; swipe = null;
+  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) { if (dx > 0) prevSentence(); else nextSentence(); return; }
+  if (Math.abs(dx) < 12 && Math.abs(dy) < 12) toggle();
+});
+
+let drag = null;
+const fracAt = e => { const r = el.ruler.getBoundingClientRect(); return clamp((e.clientX - r.left) / r.width, 0, 1); };
+el.ruler.addEventListener('pointerdown', e => {
+  if (!M.tokens.length || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  e.preventDefault();
+  try { el.ruler.setPointerCapture(e.pointerId); } catch {}
+  drag = { wasPlaying: playing };
+  if (playing) pause();
+  pos = Math.round(fracAt(e) * (M.tokens.length - 1)); stopNote = null; render(pos);
+});
+el.ruler.addEventListener('pointermove', e => { if (drag) { pos = Math.round(fracAt(e) * (M.tokens.length - 1)); render(pos); } });
+el.ruler.addEventListener('pointerup', e => {
+  if (!drag) return;
+  const was = drag.wasPlaying; drag = null;
+  const i = Math.round(fracAt(e) * (M.tokens.length - 1));
+  goTo(M.sents[M.tokens[i].sent]);
+  if (was) play();
+});
+el.ruler.addEventListener('pointercancel', () => { if (drag) { drag = null; goTo(pos); } });
+
+const tap = (btn, fn) => btn.addEventListener('click', e => { fn(); if (e.detail > 0) btn.blur(); });
+tap(el.play, toggle);
+tap(el.prev, prevSentence);
+tap(el.next, nextSentence);
+tap(el.wpmUp, () => setWpm(S.wpm + 10));
+tap(el.wpmDown, () => setWpm(S.wpm - 10));
+el.sectionBtn.addEventListener('click', () => toggleOutline());
+document.addEventListener('pointerdown', e => {
+  if (!el.outline.hidden && !el.outline.contains(e.target) && !el.sectionBtn.contains(e.target)) toggleOutline(false);
+});
+el.ctxText.addEventListener('click', e => {
+  const s = e.target.closest('span[data-i]');
+  if (s) goTo(+s.dataset.i);
+});
+
+// ================= keyboard =================
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (!el.outline.hidden) { toggleOutline(false); el.sectionBtn.focus(); e.preventDefault(); return; }
+    if (closePanel()) e.preventDefault();
+    return;
+  }
+  if (openName) { trapTab(e); return; }
+  if (e.altKey || e.ctrlKey || e.metaKey) return;
+  const tgt = e.target instanceof Element ? e.target : document.body;
+  if (tgt.closest('textarea, select, [contenteditable="true"], input:not([type=checkbox]):not([type=radio])')) return;
+  if ((e.key === ' ' || e.key === 'Enter') && tgt.closest('button, a, input, label, summary')) return;
+  if (!el.outline.hidden && tgt.closest('#outline') && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+    e.preventDefault();
+    const bs = [...el.outline.querySelectorAll('button')], k = bs.indexOf(tgt);
+    bs[clamp(k + (e.key === 'ArrowDown' ? 1 : -1), 0, bs.length - 1)]?.focus();
+    return;
+  }
+  switch (e.key) {
+    case ' ': case 'k': case 'K': e.preventDefault(); toggle(); break;
+    case 'Enter': if (tgt === el.reader) { e.preventDefault(); toggle(); } break;
+    case 'ArrowLeft': case 'j': case 'J': e.preventDefault(); if (e.shiftKey) stepWord(-1); else prevSentence(); break;
+    case 'ArrowRight': case 'l': case 'L': e.preventDefault(); if (e.shiftKey) stepWord(1); else nextSentence(); break;
+    case 'ArrowUp': e.preventDefault(); setWpm(S.wpm + (e.shiftKey ? 50 : 10)); break;
+    case 'ArrowDown': e.preventDefault(); setWpm(S.wpm - (e.shiftKey ? 50 : 10)); break;
+    case 'Home': e.preventDefault(); goTo(0); break;
+    case 'End': e.preventDefault(); goTo(M.tokens.length - 1); break;
+  }
+});
+
+// ================= panels =================
+const panels = { load: $('#panel-load'), edit: $('#panel-edit'), settings: $('#panel-settings') };
+let openName = null, opener = null;
+function openPanel(name, from) {
+  if (openName) closePanel(false);
+  if (playing) pause();
+  toggleOutline(false);
+  openName = name; opener = from || document.activeElement;
+  if (name === 'load') renderLibrary();
+  if (name === 'edit') fillEditor();
+  if (name === 'settings') fillSettings();
+  panels[name].hidden = false; el.scrim.hidden = false;
+  requestAnimationFrame(() => panels[name].querySelector('[data-autofocus]')?.focus());
+}
+function closePanel(restoreFocus = true) {
+  if (!openName) return false;
+  panels[openName].hidden = true; el.scrim.hidden = true; openName = null;
+  if (restoreFocus && opener && typeof opener.focus === 'function') opener.focus();
+  return true;
+}
+function trapTab(e) {
+  if (e.key !== 'Tab') return;
+  const f = [...panels[openName].querySelectorAll('button, input, textarea, select, [tabindex]:not([tabindex="-1"])')]
+    .filter(x => !x.disabled && !x.closest('[hidden]'));
+  if (!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}
+$('#open-load').addEventListener('click', e => openPanel('load', e.currentTarget));
+$('#open-edit').addEventListener('click', e => openPanel('edit', e.currentTarget));
+$('#open-settings').addEventListener('click', e => openPanel('settings', e.currentTarget));
+el.scrim.addEventListener('click', () => closePanel());
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closePanel()));
+
+// --- Laden ---
+function stripMarkdown(s) {
+  return s.replace(/```[\s\S]*?```/g, '')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/(\*\*|__)(.+?)\1/g, '$2')
+    .replace(/(^|[\s(])[*_]([^*_\n]+)[*_](?=[\s).,;:!?]|$)/gm, '$1$2')
+    .replace(/^\s{0,3}>\s?/gm, '')
+    .replace(/^\s*\|.*\|\s*$/gm, '')
+    .replace(/^\s*(-{3,}|\*{3,}|_{3,})\s*$/gm, '')
+    .replace(/^\s*[-*+]\s+/gm, '\n')
+    .replace(/^(\s*\d+[.)]\s+)/gm, '\n$1');
+}
+async function importFile(file) {
+  const name = file.name || t('doc.file'), ext = (name.split('.').pop() || '').toLowerCase();
+  const base = name.replace(/\.[^.]+$/, '') || t('doc.file');
+  if (ext === 'pdf' || file.type === 'application/pdf') return importPdf(file, base);
+  if (['txt', 'md', 'markdown', 'text'].includes(ext) || (file.type || '').startsWith('text/')) {
+    let text = '';
+    try { text = await file.text(); } catch { toast(t('t.fileReadFail'), 'error'); return; }
+    if (ext === 'md' || ext === 'markdown') text = stripMarkdown(text);
+    if (!text.trim()) { toast(t('t.fileEmpty'), 'error'); return; }
+    openDoc({ id: newId(), title: /^\s*#{1,6}\s/m.test(text) ? titleFromText(text) : base, source: 'text', text, original: text, pos: 0 });
+    toast(t('t.fileLoaded', { words: unit('word', M.words), name }));
+    return;
+  }
+  toast(t('t.fileUnsupported'), 'error', 7000);
+}
+const fileInput = $('#file-input');
+fileInput.addEventListener('change', () => {
+  const f = fileInput.files && fileInput.files[0];
+  fileInput.value = '';
+  if (f) { closePanel(false); importFile(f); }
+});
+$('#paste-go').addEventListener('click', () => {
+  const ta = $('#paste-text'), text = ta.value;
+  if (!text.trim()) { toast(t('t.pasteEmpty'), 'error'); ta.focus(); return; }
+  closePanel(false); ta.value = '';
+  openDoc({ id: newId(), title: titleFromText(text), source: 'text', text, original: text, pos: 0 });
+  toast(t('t.pasteReady', { words: unit('word', M.words) }));
+});
+$('#open-sample').addEventListener('click', () => { closePanel(false); openDoc(sampleDoc()); });
+function renderLibrary() {
+  const ul = $('#lib-list');
+  ul.replaceChildren();
+  $('#lib-empty').hidden = LIB.length > 0;
+  for (const rec of LIB) {
+    const li = document.createElement('li');
+    if (D && rec.id === D.id) li.className = 'current';
+    const open = document.createElement('button'); open.type = 'button'; open.className = 'open';
+    const ttl = document.createElement('span'); ttl.className = 'ttl'; ttl.textContent = rec.title;
+    const sub = document.createElement('span'); sub.className = 'sub';
+    const pct = rec.tokens > 1 ? Math.min(100, Math.round((POS[rec.id] || 0) / (rec.tokens - 1) * 100)) : 0;
+    const date = rec.updatedAt ? new Date(rec.updatedAt).toLocaleDateString(LOCALE[LANG], { day: 'numeric', month: 'short' }) : '';
+    sub.textContent = t('lib.sub', { words: unit('word', rec.words || 0), p: pct }) + (date ? ' · ' + date : '');
+    open.append(ttl, sub);
+    open.addEventListener('click', () => {
+      closePanel(false);
+      const r = LIB.find(x => x.id === rec.id);
+      if (r) openDoc(docFromRec(r));
+    });
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'btn small ghost del'; del.textContent = t('lib.remove');
+    del.setAttribute('aria-label', t('lib.remove.aria', { title: rec.title }));
+    del.addEventListener('click', () => {
+      if (del.dataset.armed !== '1') {
+        del.dataset.armed = '1'; del.textContent = t('lib.sure'); del.classList.add('danger');
+        setTimeout(() => { if (del.isConnected) { del.dataset.armed = ''; del.textContent = t('lib.remove'); del.classList.remove('danger'); } }, 3500);
+        return;
+      }
+      LIB = LIB.filter(x => x.id !== rec.id); delete POS[rec.id];
+      saveLib(); if (canStore) savePosMap();
+      if (D && D.id === rec.id) openDoc(sampleDoc());
+      renderLibrary();
+    });
+    li.append(open, del);
+    ul.append(li);
+  }
+}
+
+// --- Text prüfen ---
+const editText = $('#edit-text'), editTitle = $('#edit-title'), editStats = $('#edit-stats');
+const CLEAN_KEYS = ['dropRunning', 'dropCites', 'dropRefs', 'headings'];
+const updateEditStats = debounce(() => {
+  const m = parseText(editText.value);
+  editStats.textContent = t('edit.stats', { words: unit('word', m.words), sents: unit('sent', m.sents.length - m.heads.length), heads: unit('head', m.heads.length), t: fmtDur(totalTime(m)), wpm: S.wpm });
+}, 150);
+// Seitenmarken in der Schreibweise der aktuellen Sprache zeigen (⟦p.4⟧ bzw. ⟦S.4⟧); gelesen werden beide Formen
+const localMarkers = s => String(s).replace(PAGE_ANY, (m, p) => `⟦${t('marker.page')}${p}⟧`);
+function fillEditor() {
+  editTitle.value = D.title || '';
+  editText.value = localMarkers(D.text);
+  updateEditStats();
+  $('#edit-restore').hidden = !(D.original && localMarkers(D.original) !== localMarkers(D.text));
+  for (const k of CLEAN_KEYS) $('#opt-' + k).checked = !!S[k];
+  $('#reclean').disabled = !D.raw;
+  $('#reclean-note').hidden = !!D.raw;
+}
+editText.addEventListener('input', updateEditStats);
+$('#edit-apply').addEventListener('click', () => {
+  const text = editText.value;
+  if (!text.trim()) { toast(t('t.editEmpty'), 'error'); return; }
+  const frac = M.tokens.length > 1 ? clamp(pos, 0, M.tokens.length - 1) / (M.tokens.length - 1) : 0;
+  const changed = text !== localMarkers(D.text);   // nur umgeschriebene Seitenmarken zählen nicht als Änderung
+  if (D.id === 'sample' && changed) D = { ...D, id: newId(), source: 'text' };
+  if (changed) D.text = text;
+  D.title = editTitle.value.trim() || D.title;
+  M = parseText(D.text);
+  curHead = -2; stopNote = null;
+  const i = Math.round(frac * Math.max(0, M.tokens.length - 1));
+  pos = M.tokens.length ? M.sents[M.tokens[i].sent] : 0;
+  computeTimes();
+  el.docTitle.textContent = D.title; el.docTitle.title = D.title; el.docChip.hidden = D.id !== 'sample';
+  buildRuler(); buildOutline(); render(pos); renderContext(); syncPlay();
+  rememberDoc(D); savePos();
+  closePanel(false);
+  toast(t('t.applied', { words: unit('word', M.words) }));
+});
+$('#edit-copy').addEventListener('click', () => {
+  const fallback = () => { editText.focus(); editText.select(); toast(t('t.copyFallback')); };
+  try { navigator.clipboard.writeText(editText.value).then(() => toast(t('t.copied')), fallback); } catch { fallback(); }
+});
+$('#edit-restore').addEventListener('click', () => { editText.value = localMarkers(D.original); updateEditStats(); toast(t('t.restored')); });
+for (const k of CLEAN_KEYS) $('#opt-' + k).addEventListener('change', e => { S[k] = e.target.checked; saveSettings(); });
+$('#reclean').addEventListener('click', () => {
+  if (!D.raw) return;
+  editText.value = cleanPdf(D.raw, S).text;
+  updateEditStats();
+  toast(t('t.recleaned'));
+});
+
+// --- Tempo und Anzeige ---
+const PAUSE_KEYS = ['sentPause', 'clausePause', 'paraPause'];
+function updateSettingOutputs() {
+  for (const k of PAUSE_KEYS) $('#out-' + k).textContent = S[k] ? t('set.pause.out', { x: fmt1(S[k]) }) : t('set.pause.none');
+  $('#out-size').textContent = t('set.size.out', { p: Math.round(S.size * 100) });
+}
+function fillSettings() {
+  $('#wpm-range').value = S.wpm;
+  for (const k of PAUSE_KEYS) $('#opt-' + k).value = S[k];
+  $('#opt-size').value = S.size;
+  for (const k of ['ramp', 'longWords', 'paraStop', 'mark', 'guides']) $('#opt-' + k).checked = !!S[k];
+  $('#font-' + S.font).checked = true;
+  updateSettingOutputs(); updateTempo();
+}
+function applyDisplay() {
+  el.reader.classList.toggle('sans', S.font === 'sans');
+  el.reader.classList.toggle('no-mark', !S.mark);
+  el.reader.classList.toggle('no-guides', !S.guides);
+  document.documentElement.style.setProperty('--word-scale', String(S.size));
+  if (M && M.tokens.length) place();
+}
+$('#wpm-range').addEventListener('input', e => setWpm(+e.target.value));
+for (const k of PAUSE_KEYS) $('#opt-' + k).addEventListener('input', e => { S[k] = +e.target.value; saveSettings(); updateSettingOutputs(); computeTimes(); });
+$('#opt-size').addEventListener('input', e => { S.size = +e.target.value; saveSettings(); updateSettingOutputs(); applyDisplay(); });
+for (const k of ['ramp', 'longWords', 'paraStop']) $('#opt-' + k).addEventListener('change', e => { S[k] = e.target.checked; saveSettings(); computeTimes(); });
+for (const k of ['mark', 'guides']) $('#opt-' + k).addEventListener('change', e => { S[k] = e.target.checked; saveSettings(); applyDisplay(); });
+document.querySelectorAll('input[name="font"]').forEach(r => r.addEventListener('change', e => {
+  if (e.target.checked) { S.font = e.target.value; saveSettings(); applyDisplay(); }
+}));
+for (const v of [200, 250, 300, 350, 400, 500, 600]) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'btn small'; b.textContent = v;
+  b.setAttribute('aria-label', t('set.preset.aria', { v }));
+  b.addEventListener('click', () => setWpm(v));
+  $('#presets').append(b);
+}
+$('#reset-settings').addEventListener('click', () => {
+  Object.assign(S, DEFAULTS); saveSettings(); fillSettings(); applyDisplay(); computeTimes();
+  toast(t('t.defaults'));
+});
+
+// ================= drag & drop, lifecycle =================
+let dragDepth = 0;
+const hasFiles = e => Array.from(e.dataTransfer?.types || []).includes('Files');
+window.addEventListener('dragenter', e => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; el.drop.hidden = false; });
+window.addEventListener('dragover', e => { if (hasFiles(e)) e.preventDefault(); });
+window.addEventListener('dragleave', e => { if (!hasFiles(e)) return; dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) el.drop.hidden = true; });
+window.addEventListener('drop', e => {
+  if (!hasFiles(e)) return;
+  e.preventDefault(); dragDepth = 0; el.drop.hidden = true;
+  const f = e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) { closePanel(false); importFile(f); }
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden) { pause(); savePos(); } });
+window.addEventListener('pagehide', () => { savePos(); if (canStore) store.set(K.pos, POS); });
+window.addEventListener('resize', debounce(() => { if (M && M.tokens.length) place(); }, 60));
+
+// ================= start =================
+document.documentElement.lang = LANG;
+document.title = t('app.title');
+applyStatic();
+document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === LANG)));
+applyDisplay();
+{
+  const cur = store.get(K.cur, 'sample');
+  const rec = cur && cur !== 'sample' ? LIB.find(x => x.id === cur) : null;
+  openDoc(rec ? docFromRec(rec) : sampleDoc());
+}
+fillSettings();
+if (document.fonts) {
+  document.fonts.load('480 40px Literata').then(() => place(), () => {});
+  document.fonts.ready.then(() => place(), () => {});
+}
+// Für Tests und Fehlersuche
+window.__goatreader = {
+  state: () => ({ pos, playing, n: M.tokens.length, words: M.words, eff: effWpm(), doc: D && D.id, title: D && D.title, text: D && D.text, sents: M.sents, wpm: S.wpm, lang: LANG }),
+  t, unit, dict: I18N
+};
+})();
+</script>
+</body>
+</html>

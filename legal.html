@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Legal notice · GOATreader</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="legal.css">
+</head>
+<body>
+<main class="legal">
+  <nav class="top">
+    <a class="back" href="./">← GOATreader</a>
+    <div class="lang" role="group" aria-label="Language / Sprache">
+      <button type="button" data-lang="en" lang="en" title="English" aria-pressed="true">EN</button><button type="button" data-lang="de" lang="de" title="Deutsch" aria-pressed="false">DE</button>
+    </div>
+  </nav>
+<section lang="en" data-l="en">
+  <h1>Legal notice</h1>
+  <p class="muted">Information pursuant to § 5 DDG and § 18 (1) MStV (German law)</p>
+  <p class="address">Victor Batschkus<br>Reinmarplatz 5<br>80637 München<br>Germany</p>
+  <h2>Contact</h2>
+  <p>Email: <a href="mailto:hello@goatreader.app">hello@goatreader.app</a></p>
+  <h2>About GOATreader</h2>
+  <p>GOATreader is a free reading tool run privately by Victor Batschkus. There are no ads, no accounts and no paid features.</p>
+  <p class="other"><a href="privacy.html">Privacy policy</a></p>
+</section>
+<section lang="de" data-l="de">
+  <h1>Impressum</h1>
+  <p class="muted">Angaben gemäß § 5 DDG und § 18 Abs. 1 MStV</p>
+  <p class="address">Victor Batschkus<br>Reinmarplatz 5<br>80637 München<br>Deutschland</p>
+  <h2>Kontakt</h2>
+  <p>E-Mail: <a href="mailto:hello@goatreader.app">hello@goatreader.app</a></p>
+  <h2>Über GOATreader</h2>
+  <p>GOATreader ist ein kostenloses, privat betriebenes Lesewerkzeug von Victor Batschkus. Es gibt keine Werbung, keine Anmeldung und keine kostenpflichtigen Funktionen.</p>
+  <p class="other"><a href="privacy.html">Datenschutzerklärung</a></p>
+</section>
+</main>
+<script>
+(() => {
+  const KEY = 'goatreader.lang', TITLES = {en: 'Legal notice · GOATreader', de: 'Impressum · GOATreader'};
+  let lang = 'en';
+  try {
+    const q = (new URLSearchParams(location.search).get('lang') || '').toLowerCase();
+    if (TITLES[q]) { lang = q; localStorage.setItem(KEY, JSON.stringify(q)); }
+    else { const v = JSON.parse(localStorage.getItem(KEY)); if (TITLES[v]) lang = v; }
+  } catch { /* kein Speicher: Englisch */ }
+  function show(l) {
+    document.documentElement.lang = l;
+    document.title = TITLES[l];
+    document.querySelectorAll('[data-l]').forEach(e => { e.hidden = e.dataset.l !== l; });
+    document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === l)));
+  }
+  document.querySelectorAll('.lang button').forEach(b => b.addEventListener('click', () => {
+    show(b.dataset.lang);
+    try { localStorage.setItem(KEY, JSON.stringify(b.dataset.lang)); } catch { /* egal */ }
+  }));
+  document.documentElement.classList.add('js');
+  show(lang);
+})();
+</script>
+</body>
+</html>
