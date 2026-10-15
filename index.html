@@ -966,6 +966,21 @@ function joinLine(a, b) {
   return a + ' ' + b;
 }
 
+// Gedankenstrich ohne Leerzeichen zwischen zwei Wörtern („culture–economic“, „results—surprisingly“):
+// nach dem Strich trennen, damit beide Wörter einzeln erscheinen. Zahlenbereiche wie „200–300“ bleiben zusammen.
+const DASH_JOIN = /[\p{L}\p{M}'’”»)\]][–—](?=[„“"«(\[]?\p{L})/u;
+function splitDashes(r) {
+  const out = [];
+  let m;
+  while ((m = DASH_JOIN.exec(r))) {
+    const cut = m.index + m[0].length;
+    out.push(r.slice(0, cut));
+    r = r.slice(cut);
+  }
+  out.push(r);
+  return out;
+}
+
 function parseText(raw) {
   const text = String(raw || '').normalize('NFKC').replace(/\r\n?/g, '\n').replace(/[   \t]/g, ' ');
   const lines = text.split('\n');
@@ -1004,7 +1019,9 @@ function parseText(raw) {
       const pm = r.match(PAGE_TOKEN);
       if (pm) { pendingPage = +pm[1]; continue; }
       if (!WORDCHAR.test(r)) { if (ws.length) ws[ws.length - 1].w += ' ' + r; continue; }
-      ws.push({ w: r, pg: pendingPage }); pendingPage = null;
+      const parts = splitDashes(r);
+      parts.forEach((p, k) => ws.push({ w: p, pg: k ? null : pendingPage, glue: k < parts.length - 1 }));
+      pendingPage = null;
     }
     if (!ws.length) continue;
     paras.push(tokens.length);
@@ -1015,8 +1032,9 @@ function parseText(raw) {
       if (startSent) { sents.push(tokens.length); startSent = false; }
       const last = j === ws.length - 1;
       const endSent = last || isSentenceEnd(w, ws[j + 1].w);
-      tokens.push({ kind: 'w', w, orp: orpIndex(w), letters: (w.match(/[\p{L}\p{N}]/gu) || []).length,
-        endSent, endClause: !endSent && CLAUSE_RE.test(w), endPara: last,
+      const glue = !!ws[j].glue;   // hängt ohne Leerzeichen am nächsten Wort (Gedankenstrich)
+      tokens.push({ kind: 'w', w, orp: orpIndex(w), letters: (w.match(/[\p{L}\p{N}]/gu) || []).length, glue,
+        endSent, endClause: !endSent && CLAUSE_RE.test(w) && !(glue && /–$/.test(w)), endPara: last,
         para: paras.length - 1, sent: sents.length - 1, head: heads.length - 1, wi: words });
       words++;
       if (endSent) startSent = true;
@@ -1103,7 +1121,9 @@ function buildLines(items, p, view) {
     if (!cur) cur = { p, x0: x, x1: x, y, size, segs: [] };
     const gap = x - cur.x1;
     const sup = cur.segs.length > 0 && size < cur.size * 0.85 && y - cur.y > cur.size * 0.12 && /^[\s\d,;–\-*†‡§]{1,12}$/.test(it.str);
-    cur.segs.push({ t: it.str, sup, space: cur.segs.length > 0 && gap > 0.12 * Math.min(size, cur.size), size });
+    cur.segs.push({ t: it.str, sup, space: cur.segs.length > 0 && gap > 0.12 * Math.min(size, cur.size), size, font: it.fontName || '' });
+    // pdf.js überbrückt große Lücken in einer Zeile mit Leerzeichen-Stücken: Tabellenspalten, Beschriftungen nebeneinander
+    if (!it.str.trim() && w > 2 * size && cur.segs.some(g => g.t.trim())) cur.tab = true;
     cur.x0 = Math.min(cur.x0, x); cur.x1 = Math.max(cur.x1, x + w);
     if (it.hasEOL) flush();
   }
@@ -1126,6 +1146,21 @@ const REF_HEADS = /^(references|bibliography|literature cited|works cited|refere
 const NUM_HEAD = /^(?:\d{1,2}(?:\.\d{1,2}){0,3}\.?|[IVX]{1,6}\.|[A-H]\.)\s+(?=\p{L})/u;
 const PAGE_NO = /^(?:(?:page|seite|s\.|p\.)\s*)?(?:\d{1,4}|[ivxlc]{1,7})(?:\s*(?:of|von|\/|-|–)\s*\d{1,4})?$/i;
 const stripNum = s => s.replace(NUM_HEAD, '').replace(/[\s:.]+$/, '').trim();
+// Überschriften in Textgröße: Schreibweise und typische Verwechslungen
+const MINOR = new Set(('a an the and or nor but of in on at to for by with from as via vs per into onto over than upon ' +
+  'und oder der die das des dem den ein eine einer eines im am an auf aus bei für mit nach über unter vom von vor zu zum zur').split(' '));
+const CAPTION = /^(?:supplementa(?:ry|l)\s+)?(?:fig(?:ure)?s?|tab(?:le)?|abb(?:ildung)?|tab(?:elle)?|scheme|chart|exhibit|plate|box|listing|algorithm)\.?\s*[A-Z]?\d+[a-z]?(\s+\S)?/i;
+// Bildunterschrift „Figure 1. …“, „Fig. 2 Results …“, „Tabelle 3“ – aber nicht der Satz „Figure 1 shows …“
+const isCaption = s => { const m = s.match(CAPTION); return !!m && !(m[1] && /\p{Ll}/u.test(m[1].trim())); };
+const CONTACT = /@|https?:\/\/|www\.|\bdoi\b|orcid|\buniversit|\bdepartment of\b|\bfaculty of\b|\binstitut(?:e of|e for| für)\b|correspond|e-?mail|^(?:key ?words|schlüsselwörter|schlagwörter|jel)\b/i;
+// 'caps' (GROSSBUCHSTABEN), 'title' (jedes inhaltstragende Wort groß) oder ''
+function caseShape(s) {
+  const ws = s.match(/\p{L}[\p{L}\p{M}'’‐-]*/gu) || [];
+  const letters = ws.join('').replace(/[^\p{L}]/gu, '');
+  if (letters.length < 3) return '';
+  if ((letters.match(/\p{Lu}/gu) || []).length >= letters.length * 0.85) return 'caps';
+  return /^\p{Lu}/u.test(ws[0]) && ws.every(w => /^\p{Lu}/u.test(w) || MINOR.has(w.toLowerCase())) ? 'title' : '';
+}
 
 // Zitierklammern: [12], [3–5], (Rayner et al., 2016), (vgl. Müller 2018, S. 12); "Rayner (2016)" wird zu "Rayner"
 const NAME = "\\p{Lu}[\\p{L}'’\\-]+(?:\\s(?:van|von|de|der|den|du|di|da|le|la|ten)\\s\\p{Lu}[\\p{L}'’\\-]+)?";
@@ -1164,23 +1199,23 @@ function cleanPdf(raw, o) {
   const pages = raw.pages, nP = pages.length;
   const all = [];
   for (const pg of pages) for (const l of pg.lines) {
-    l.text = lineText(l, o.dropCites); l.rel = l.y / pg.H; l.drop = !l.text; l.head = false; l.ref = false;
+    l.text = lineText(l, o.dropCites); l.rel = l.y / pg.H; l.drop = !l.text; l.head = false; l.ref = false; l.sure = false; l.hs = false;
     all.push(l);
   }
   const body = weightedMedian(all.filter(l => !l.drop).map(l => [l.size, l.text.length])) || 10;
 
   // Kopf-/Fußzeilen, Seitenzahlen, Zahlen- und Formelreste
-  if (o.dropRunning) {
-    const zone = l => l.rel > 0.9 || l.rel < 0.08;
-    const norm = s => s.toLowerCase().replace(/\d+/g, '#').replace(/[^\p{L}#]+/gu, ' ').trim();
-    const count = new Map();
-    for (const pg of pages) {
-      const seen = new Set();
-      for (const l of pg.lines) if (!l.drop && zone(l)) {
-        const k = norm(l.text);
-        if (k && !seen.has(k)) { seen.add(k); count.set(k, (count.get(k) || 0) + 1); }
-      }
+  const zone = l => l.rel > 0.9 || l.rel < 0.08;
+  const norm = s => s.toLowerCase().replace(/\d+/g, '#').replace(/[^\p{L}#]+/gu, ' ').trim();
+  const count = new Map(); // auf wie vielen Seiten eine Zeile oben oder unten wiederkehrt
+  for (const pg of pages) {
+    const seen = new Set();
+    for (const l of pg.lines) if (!l.drop && zone(l)) {
+      const k = norm(l.text);
+      if (k && !seen.has(k)) { seen.add(k); count.set(k, (count.get(k) || 0) + 1); }
     }
+  }
+  if (o.dropRunning) {
     const minRep = nP >= 3 ? Math.max(2, Math.ceil(nP * 0.25)) : 2;
     for (const l of all) {
       if (l.drop) continue;
@@ -1191,6 +1226,17 @@ function cleanPdf(raw, o) {
       if (tx.length >= 4 && letters / tx.length < 0.4) l.drop = true;
     }
   }
+
+  // Schrift des Fließtexts: die Schrift(en) mit den meisten Buchstaben in Textgröße. Fett, kursiv oder eine andere Familie weicht ab.
+  const bodyLine = l => !l.drop && Math.abs(l.size - body) <= 0.5;
+  const fontN = new Map();
+  let fontTot = 0;
+  for (const l of all) {
+    l.fl = new Map(); // Buchstaben je Schrift
+    for (const g of l.segs) if (!g.sup && g.font) { const n = (g.t.match(/\p{L}/gu) || []).length; if (n) l.fl.set(g.font, (l.fl.get(g.font) || 0) + n); }
+    if (bodyLine(l)) for (const [f, n] of l.fl) { fontN.set(f, (fontN.get(f) || 0) + n); fontTot += n; }
+  }
+  const bodyFonts = new Set([...fontN].filter(([, n]) => n >= fontTot * 0.25).map(([f]) => f));
 
   // Spalten: Reihenfolge nur korrigieren, wenn der Inhaltsstrom zwischen den Spalten hin und her springt
   for (const pg of pages) {
@@ -1233,12 +1279,36 @@ function cleanPdf(raw, o) {
       l.colRight = right.get(k) ?? right.get('F') ?? l.x1;
       l.colLeft = left.get(k) ?? l.x0;
     }
+    // zusätzlich die häufigste Satzkante je Spalte (robust gegen einzelne zentrierte oder breitere Zeilen)
+    const edge = new Map(), seen = new Map();
+    for (const l of ls) if (Math.abs(l.size - body) <= 1.5) for (const [s, x] of [['<', l.x0], ['>', l.x1]]) {
+      const k = key(l) + s, c = (seen.get(k + Math.round(x)) || 0) + 1;
+      seen.set(k + Math.round(x), c);
+      if (c > (edge.get(k)?.[1] || 0)) edge.set(k, [x, c]);
+    }
+    for (const l of ls) {
+      const e0 = edge.get(key(l) + '<'), e1 = edge.get(key(l) + '>');
+      l.edgeL = e0 && e0[1] >= 3 ? e0[0] : l.colLeft;
+      l.edgeR = e1 && e1[1] >= 3 ? e1[0] : l.colRight;
+    }
     const gaps = [];
     for (let i = 1; i < pg.order.length; i++) {
       const a = pg.order[i - 1], b = pg.order[i], g = a.y - b.y;
       if (g > 0 && g < 3 * body && Math.abs(a.x0 - b.x0) < body * 6) gaps.push(g);
     }
     pg.lineGap = median(gaps) || body * 1.2;
+    // Anteil der Buchstaben in einer anderen Schrift als dem Fließtext; Seiten mit eigenen Schriftobjekten
+    // (keine Fließtext-Schrift der übrigen Seiten) messen an ihrer häufigsten Schrift
+    const pf = new Map();
+    for (const l of ls) if (bodyLine(l)) for (const [f, n] of l.fl) pf.set(f, (pf.get(f) || 0) + n);
+    let own = '', oc = 299;
+    if (![...pf.keys()].some(f => bodyFonts.has(f))) for (const [f, n] of pf) if (n > oc) { oc = n; own = f; }
+    for (const l of ls) {
+      let alt = 0, n = 0, fc = 0;
+      l.font = '';
+      for (const [f, c] of l.fl) { n += c; if (!bodyFonts.has(f) && f !== own) alt += c; if (c > fc) { fc = c; l.font = f; } }
+      l.alt = n ? alt / n : 0;
+    }
   }
 
   // Überschriften
@@ -1246,10 +1316,68 @@ function cleanPdf(raw, o) {
     const tx = l.text, nw = tx.split(' ').length, plain = stripNum(tx);
     if (nw <= 4 && REF_HEADS.test(plain)) { l.head = true; l.ref = true; continue; }
     if (!o.headings || nw > 16 || tx.length > 160) continue;
-    const big = l.size >= body * 1.12 && !/[,;]$/.test(tx) && /\p{L}{2}/u.test(tx);
+    // Überschriften beginnen nicht klein („and William H. Macey“ ist eine Autorenzeile)
+    const big = l.size >= body * 1.12 && !/[,;]$/.test(tx) && /\p{L}{2}/u.test(tx) && !/^\p{Ll}/u.test(plain);
     const key = KEY_HEADS.test(plain);
     const numbered = NUM_HEAD.test(tx) && nw <= 10 && !/[.,;:]$/.test(tx) && /^\p{Lu}/u.test(plain) && (l.x1 - l.x0) < (l.colRight - l.colLeft) * 0.85;
     l.head = big || key || numbered;
+    l.sure = key || numbered;
+  }
+  // Überschriften in Textgröße, etwa fett in GROSSBUCHSTABEN oder in Title Case. Alles muss zusammenkommen: andere Schrift
+  // als der Fließtext (oder etwas größer), diese Schreibweise, kurz und ohne Satzzeichen am Ende, links an der Spalte oder
+  // zentriert, frei darüber (Seiten-/Spaltenanfang, Abstand, Überschrift oder Absatzende) und danach kein Weiterlesen im
+  // selben Stil. Nicht: Bildunterschriften samt Titelzeile, Kontaktangaben, Tabellenzellen, wiederkehrende Kopfzeilen,
+  // kleinere Schrift (Randnotizen) und die Titelseite vor der ersten sicheren Überschrift (Autorinnen, Institute).
+  if (o.headings) {
+    const same = (a, b) => a.font === b.font && Math.abs(a.size - b.size) <= 0.5;
+    const near = (a, b) => a.y - b.y > 0 && a.y - b.y < a.size * 2.4;
+    const left = l => Math.max(l.colLeft, l.edgeL);
+    const wide = l => l.x1 - l.x0 >= (l.colRight - left(l)) * 0.5;
+    const styled = l => !l.ref && !l.tab && l.size >= body * 0.95 && (l.size >= body * 1.05 || l.alt >= 0.85) && l.text.split(' ').length <= 14 &&
+      /\p{L}{2}/u.test(l.text) && !l.segs.some(g => g.sup) && !PAGE_NO.test(l.text) && !(zone(l) && (count.get(norm(l.text)) || 0) >= 2);
+    const sentence = s => [...s.matchAll(/(\p{L}+)\.\s+\S/gu)].some(m => m[1].length > 1 && !ABBR.has(m[1].toLowerCase() + '.'));
+    let on = false;
+    for (const pg of pages) {
+      const ls = pg.order;
+      if (pg !== pages[0]) on = true;
+      // Nachbarzeilen derselben Spalte (geometrisch, unabhängig von der Reihenfolge im Inhaltsstrom)
+      const inCol = (x, l) => x !== l && x.x0 < l.colRight && x.x1 > left(l);
+      const above = l => ls.reduce((r, x) => (inCol(x, l) && x.y > l.y + 0.5 && (!r || x.y < r.y) ? x : r), null);
+      const below = l => ls.reduce((r, x) => (inCol(x, l) && x.y < l.y - 0.5 && (!r || x.y > r.y) ? x : r), null);
+      const cell = l => ls.some(x => x !== l && Math.abs(x.y - l.y) < l.size * 0.4 && Math.abs(x.size - l.size) <= 1 &&
+        (x.x0 > l.x1 + 1 || x.x1 < l.x0 - 1) && x.x0 >= l.colLeft - body && x.x1 <= l.colRight + body);
+      for (const l of ls) {
+        if (l.head) { if (l.sure) on = true; continue; }
+        if (!on || !styled(l)) continue;
+        const a = above(l);
+        if (a && a.head && same(a, l) && near(a, l) && wide(a)) { l.head = true; continue; } // zweite Zeile einer Überschrift
+        // darüber: Seiten-/Spaltenanfang, Abstand, eine Überschrift oder (ohne Abstand) ein Satzende; keine Bildunterschrift
+        const tight = a && !a.head && a.y - l.y <= pg.lineGap * 1.3;
+        if ((tight && (!END_RE.test(a.text) || same(a, l))) || (a && near(a, l) && isCaption(a.text))) continue;
+        const block = [l];
+        for (let b = below(l); block.length < 3 && b && !b.head && same(b, l) && near(block[block.length - 1], b) &&
+          wide(block[block.length - 1]) && styled(b); b = below(b)) block.push(b);
+        const q = block[block.length - 1], nx = below(q), text = block.map(x => x.text).join(' ');
+        // darunter: ein neuer Absatz oder die nächste Überschrift; nicht klein weiter, keine Bildunterschrift oder Kleingedrucktes
+        // (dann ist es eine Beschriftung in einer Abbildung)
+        if (nx) {
+          const close = near(q, nx);
+          if (isCaption(nx.text) || /^\p{Ll}/u.test(nx.text) || nx.size < body - 1.5) continue;
+          if (close && same(nx, q) && (wide(q) || tight)) continue; // geht im selben Stil weiter: ein Absatz
+          if (close && q.x1 >= q.colRight - body * 2.5 && q.y - nx.y <= pg.lineGap * 1.15) continue; // volle Zeile ohne Luft: Absatzanfang
+        }
+        if (tight && !(nx && near(q, nx))) continue; // ohne Abstand darüber muss direkt Fließtext folgen
+        const last = (text.match(/(\p{L}+)[^\p{L}]*$/u) || [])[1] || '';
+        if (text.split(' ').length > 24 || /[.,;:]["'”’»)\]]*$/.test(text) || /(?:\.\s?){4}/.test(text) || MINOR.has(last) || isCaption(text) ||
+          CONTACT.test(text) || sentence(text) || !caseShape(stripNum(text))) continue;
+        // links an der Spalte (höchstens um einen Absatzeinzug eingerückt) oder zentriert
+        if (![[l.colLeft, l.colRight], [l.edgeL, l.edgeR]].some(([cl, cr]) => (l.x0 >= cl - body && l.x0 <= cl + body * 2.5) ||
+          Math.abs(l.x0 + l.x1 - cl - cr) <= Math.max(body * 3, (cr - cl) * 0.06))) continue;
+        if (block.some(cell)) continue;
+        for (const x of block) x.head = true;
+        l.hs = true; // Beginn einer eigenen Überschrift: nicht mit einer darüber verschmelzen
+      }
+    }
   }
 
   // Absätze zusammensetzen
@@ -1267,7 +1395,7 @@ function cleanPdf(raw, o) {
         if (l.ref && o.dropRefs) { stop = true; break; }
         const last = blocks[blocks.length - 1];
         if (para == null && last && last.h && prev && prev.head && prev.p === l.p && prev.y - l.y < prev.size * 2.4 &&
-            Math.abs(prev.size - l.size) <= 1 && !NUM_HEAD.test(tx) && !KEY_HEADS.test(stripNum(tx))) {
+            Math.abs(prev.size - l.size) <= 1 && !NUM_HEAD.test(tx) && !KEY_HEADS.test(stripNum(tx)) && !l.hs) {
           last.text = joinLine(last.text, tx); prev = l; continue; // mehrzeilige Überschrift
         }
         pushPara();
@@ -1607,7 +1735,8 @@ function renderContext() {
     const s = document.createElement('span');
     s.textContent = w.w; s.dataset.i = k;
     if (k === pos && !stopNote) s.className = 'cur';
-    frag.append(s, ' ');
+    frag.append(s);
+    if (!w.glue) frag.append(' ');
   }
   if (b < pEnd) { const g = document.createElement('span'); g.className = 'gap'; g.textContent = '…'; frag.append(g); }
   el.ctxText.append(frag);
