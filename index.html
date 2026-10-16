@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>GOATreader: PDFs und Texte Wort für Wort lesen</title>
-<meta name="description" content="GOATreader zeigt PDFs und Texte Wort für Wort, mit Fokusbuchstabe, Satz zurück, Kontextansicht und ehrlichen Tempowerten. Kostenlos, ohne Anmeldung, alles bleibt in deinem Browser.">
+<title>GOATreader: PDFs und Texte schneller lesen</title>
+<meta name="description" content="GOATreader lässt dich PDFs und Texte schneller lesen: Wort für Wort, mit Fokusbuchstabe, Satz zurück, Kontextansicht und ehrlichen Tempowerten. Kostenlos, ohne Anmeldung, deine Texte bleiben in deinem Browser.">
 <link rel="canonical" href="https://goatreader.app/">
 <meta name="theme-color" content="#ECEEF1" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0E141A" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="GOATreader">
 <meta property="og:title" content="GOATreader">
-<meta property="og:description" content="Lies PDFs und Texte Wort für Wort. Kostenlos, ohne Anmeldung, alles bleibt in deinem Browser.">
+<meta property="og:description" content="Lies PDFs und Texte schneller. Kostenlos, ohne Anmeldung, deine Texte bleiben in deinem Browser.">
 <meta property="og:url" content="https://goatreader.app/">
 <meta property="og:locale" content="de_DE">
 <meta property="og:locale:alternate" content="en_US">
@@ -180,7 +180,7 @@ button,input,textarea,select{font:inherit;color:inherit}
 .context-text span:hover{text-decoration:underline;text-decoration-color:var(--ink-3);text-underline-offset:3px}
 .context-text span.cur{background:var(--pencil-soft);box-shadow:0 0 0 2px var(--pencil-soft);text-decoration:none}
 .context-text .gap{color:var(--ink-3);cursor:default}
-.keys{margin:0;font-size:12.5px;color:var(--ink-3);text-align:center}
+.keys{margin:0;font-size:12.5px;color:var(--ink-3);text-align:center;display:flex;flex-wrap:wrap;justify-content:center;gap:2px 16px}
 .keys kbd{font-family:var(--font-ui);font-size:11.5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--sheet);color:var(--ink-2)}
 @media (hover:none){.keys{display:none}}
 
@@ -277,9 +277,74 @@ textarea{width:100%;border:1px solid var(--rule);border-radius:8px;background:va
   *{transition:none!important;animation:none!important}
 }
 </style>
+<script>
+/* Anonyme Zählung mit GoatCounter (Server in der EU), siehe privacy.html. Keine Cookies, keine Kennung im Browser,
+   nie Texte, Titel oder Dateinamen. Zeiten misst der Browser selbst und meldet nur erreichte Stufen.
+   Aus bei Do Not Track, Global Privacy Control, Opt-out, außerhalb von goatreader.app, in Frames und in automatisierten Browsern. */
+(() => {
+  const EP = 'https://goatreader.goatcounter.com/count', KEEP = ['ref', 'utm_source', 'utm_medium', 'utm_campaign'];
+  const off = () => {
+    if (location.hostname !== 'goatreader.app' || window.top !== window.self || navigator.webdriver) return true;
+    if (navigator.globalPrivacyControl === true) return true;
+    const dnt = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+    if (dnt === '1' || dnt === 'yes') return true;
+    try { return localStorage.getItem('goatreader.nocount') === '1'; } catch (e) { return false; }
+  };
+  const sp = new URLSearchParams(location.search);
+  let refHost = '', refOrigin = '';
+  try { const u = new URL(document.referrer); if (u.hostname && u.hostname !== location.hostname) { refHost = u.hostname.toLowerCase(); refOrigin = u.origin; } } catch (e) {}
+  // Grobe Herkunftsart, nur für die Ereignisse aktiv-… (keine Adresse)
+  const SRC = (() => {
+    const p = (sp.get('ref') || sp.get('utm_source') || sp.get('src') || sp.get('source') || '').toLowerCase();
+    const is = (...d) => d.some(x => refHost === x || refHost.endsWith('.' + x));
+    if (/^(ig|insta|instagram)$/.test(p) || is('instagram.com')) return 'instagram';
+    if (/^(tt|tiktok)$/.test(p) || is('tiktok.com')) return 'tiktok';
+    if (/^(yt|youtube)$/.test(p) || is('youtube.com', 'youtu.be')) return 'youtube';
+    if (/^(li|linkedin)$/.test(p) || is('linkedin.com', 'lnkd.in')) return 'linkedin';
+    if (/(^|\.)(google|bing|duckduckgo|ecosia|qwant|startpage|yahoo|yandex|brave)\.[a-z.]+$/.test(refHost)) return 'suche';
+    return p || refHost ? 'andere' : 'direkt';
+  })();
+  const send = (path, ev) => {
+    if (off()) return;
+    let q = '?p=' + encodeURIComponent(path) + '&t=GOATreader';
+    if (ev) q += '&e=true';
+    else {
+      const keep = [];
+      for (const k of KEEP) { const v = sp.get(k); if (v) keep.push(k + '=' + encodeURIComponent(v.slice(0, 40))); }
+      if (keep.length) q += '&q=' + encodeURIComponent('?' + keep.join('&'));
+      if (refOrigin) q += '&r=' + encodeURIComponent(refOrigin);
+    }
+    const img = new Image();
+    img.referrerPolicy = 'origin';
+    img.src = EP + q + '&rnd=' + Math.random().toString(36).slice(2, 8);
+  };
+  window.goatreaderSource = SRC;
+  window.goatreaderCount = name => {
+    const n = String(name).toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 40);
+    if (!n) return;
+    send(n, true);
+    if (n === 'lesezeit-1min') send('aktiv-' + SRC, true);
+  };
+  send('/', false);
+  // Aufenthalt: nur Zeit, in der die Seite sichtbar ist, gemeldet als erreichte Stufe
+  const STAY = [[10, '10s'], [30, '30s'], [60, '1min'], [120, '2min'], [300, '5min'], [600, '10min'], [1200, '20min'], [1800, '30min'], [3600, '60min']];
+  let shown = document.visibilityState === 'visible', acc = 0, t0 = performance.now(), si = 0, iv = 0;
+  const tick = () => {
+    const now = performance.now();
+    if (shown) acc += now - t0;
+    t0 = now;
+    while (si < STAY.length && acc >= STAY[si][0] * 1000) send('aufenthalt-' + STAY[si++][1], true);
+    if (si >= STAY.length) clearInterval(iv);
+  };
+  if (!off()) {
+    document.addEventListener('visibilitychange', () => { tick(); shown = document.visibilityState === 'visible'; });
+    iv = setInterval(tick, 2000);
+  }
+})();
+</script>
 </head>
 <body>
-<noscript><p class="noscript">GOATreader braucht JavaScript. · <span lang="en">GOATreader needs JavaScript to run.</span></p></noscript>
+<noscript><p class="noscript">GOATreader braucht JavaScript.<br><span lang="en">GOATreader needs JavaScript to run.</span></p></noscript>
 <div class="app" id="app">
   <header class="bar">
     <div class="brand">
@@ -359,8 +424,8 @@ textarea{width:100%;border:1px solid var(--rule);border-radius:8px;background:va
       <p class="context-text" id="context-text"></p>
     </section>
 
-    <p class="keys" data-i18n-html="keys"><kbd>Space</kbd> start/pause · <kbd>←</kbd> <kbd>→</kbd> previous/next sentence · <kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd> one word · <kbd>↑</kbd> <kbd>↓</kbd> speed</p>
-    <footer class="foot"><span data-i18n="foot.privacy">Your texts stay in your browser. Nothing is uploaded.</span><span><a href="legal.html" data-i18n="foot.legal">Legal notice</a> · <a href="privacy.html" data-i18n="foot.privacyLink">Privacy</a></span></footer>
+    <p class="keys" data-i18n-html="keys"><span><kbd>Space</kbd> start/pause</span><span><kbd>←</kbd> <kbd>→</kbd> previous/next sentence</span><span><kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd> one word</span><span><kbd>↑</kbd> <kbd>↓</kbd> speed</span></p>
+    <footer class="foot"><span data-i18n="foot.privacy">Your texts stay in your browser. Nothing is uploaded.</span><span><a href="legal.html" data-i18n="foot.legal">Legal notice</a></span><span><a href="privacy.html" data-i18n="foot.privacyLink">Privacy</a></span></footer>
   </main>
 </div>
 
@@ -485,7 +550,7 @@ textarea{width:100%;border:1px solid var(--rule);border-radius:8px;background:va
 const APP = 'GOATreader';
 const I18N = {
   en: {
-    'app.title': 'GOATreader: Read PDFs and texts word by word',
+    'app.title': 'GOATreader: Read PDFs and texts faster',
     'doc.sampleChip': 'Sample',
     'doc.untitled': 'My text',
     'doc.file': 'File',
@@ -532,7 +597,7 @@ const I18N = {
     'tempo.eff': '≈ {e} effective',
     'ctx.label': 'In context',
     'ctx.hint': 'Tap a word to jump there',
-    'keys': '<kbd>Space</kbd> start/pause · <kbd>←</kbd> <kbd>→</kbd> previous/next sentence · <kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd> one word · <kbd>↑</kbd> <kbd>↓</kbd> speed',
+    'keys': '<span><kbd>Space</kbd> start/pause</span><span><kbd>←</kbd> <kbd>→</kbd> previous/next sentence</span><span><kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd> one word</span><span><kbd>↑</kbd> <kbd>↓</kbd> speed</span>',
     'close': 'Close',
     'load.title': 'Load text',
     'load.choose': 'Choose a PDF, TXT or Markdown file',
@@ -544,14 +609,14 @@ const I18N = {
     'load.recent': 'Recently read',
     'load.empty': 'Nothing saved yet. Loaded texts and your reading position stay in this browser.',
     'load.sample': 'Open sample text',
-    'lib.sub': '{words} · {p}% read',
+    'lib.sub': '{words}, {p}% read',
     'lib.remove': 'Remove',
     'lib.sure': 'Sure?',
     'lib.remove.aria': 'Remove “{title}”',
     'edit.title': 'Review text',
     'edit.docTitle': 'Title',
     'edit.text': 'Text',
-    'edit.stats': '{words} · {sents} · {heads} · approx. {t} at {wpm} wpm',
+    'edit.stats': '{words}, {sents}, {heads}, approx. {t} at {wpm} wpm',
     'edit.note': 'Blank lines separate paragraphs. Lines starting with <code>#</code> are headings. <code>⟦p.4⟧</code> marks the start of a page.',
     'edit.apply': 'Apply',
     'edit.copy': 'Copy text',
@@ -648,7 +713,7 @@ const I18N = {
     'foot.privacyLink': 'Privacy'
   },
   de: {
-    'app.title': 'GOATreader: PDFs und Texte Wort für Wort lesen',
+    'app.title': 'GOATreader: PDFs und Texte schneller lesen',
     'doc.sampleChip': 'Beispiel',
     'doc.untitled': 'Eigener Text',
     'doc.file': 'Datei',
@@ -695,7 +760,7 @@ const I18N = {
     'tempo.eff': '≈ {e} effektiv',
     'ctx.label': 'Im Zusammenhang',
     'ctx.hint': 'Wort antippen, um dorthin zu springen',
-    'keys': '<kbd>Leertaste</kbd> Start/Pause · <kbd>←</kbd> <kbd>→</kbd> vorheriger/nächster Satz · <kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd> einzelnes Wort · <kbd>↑</kbd> <kbd>↓</kbd> Tempo',
+    'keys': '<span><kbd>Leertaste</kbd> Start/Pause</span><span><kbd>←</kbd> <kbd>→</kbd> vorheriger/nächster Satz</span><span><kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd> einzelnes Wort</span><span><kbd>↑</kbd> <kbd>↓</kbd> Tempo</span>',
     'close': 'Schließen',
     'load.title': 'Text laden',
     'load.choose': 'PDF-, TXT- oder Markdown-Datei wählen',
@@ -707,14 +772,14 @@ const I18N = {
     'load.recent': 'Zuletzt gelesen',
     'load.empty': 'Noch nichts gespeichert. Geladene Texte und deine Leseposition bleiben in diesem Browser.',
     'load.sample': 'Beispieltext öffnen',
-    'lib.sub': '{words} · {p} % gelesen',
+    'lib.sub': '{words}, {p} % gelesen',
     'lib.remove': 'Entfernen',
     'lib.sure': 'Wirklich?',
     'lib.remove.aria': '„{title}“ entfernen',
     'edit.title': 'Text prüfen',
     'edit.docTitle': 'Titel',
     'edit.text': 'Text',
-    'edit.stats': '{words} · {sents} · {heads} · ca. {t} bei {wpm} wpm',
+    'edit.stats': '{words}, {sents}, {heads}, ca. {t} bei {wpm} wpm',
     'edit.note': 'Leerzeilen trennen Absätze. Zeilen mit <code>#</code> am Anfang sind Überschriften. <code>⟦S.4⟧</code> markiert einen Seitenanfang.',
     'edit.apply': 'Übernehmen',
     'edit.copy': 'Text kopieren',
@@ -1486,6 +1551,7 @@ async function importPdf(file, fileTitle) {
   const res = cleanPdf(raw, S);
   if (!res.text.trim()) { toast(t('t.pdfNoText'), 'error', 7000); return; }
   openDoc({ id: newId(), title: res.title, source: 'pdf', text: res.text, original: res.text, raw, pos: 0 });
+  track('pdf-geladen');
   toast(t('t.pdfLoaded', { words: unit('word', M.words), pages: unit('page', n) }), 'info', 6500);
 }
 // ================= state =================
@@ -1498,6 +1564,17 @@ let cum = new Float64Array(1);    // aufsummierte Anzeigedauern
 let pos = 0;
 let playing = false, timer = 0, nextAt = 0, rampLeft = 0, playT0 = 0;
 let session = { ms: 0, words: 0 };
+// Anonyme Zählung (nur auf goatreader.app, siehe Datenschutzerklärung): ausschließlich feste Ereignisnamen, nie Texte, Titel oder Dateinamen
+const track = name => { try { if (typeof window.goatreaderCount === 'function') window.goatreaderCount(name); } catch {} };
+const startedDocs = new Set();
+// Lesezeit dieses Seitenbesuchs über alle Texte; gezählt wird nur, welche grobe Stufe erreicht ist, nie die genaue Zeit
+const READ_STEPS = [[15, '15s'], [30, '30s'], [60, '1min'], [120, '2min'], [300, '5min'], [600, '10min'], [1200, '20min'], [1800, '30min'], [3600, '60min']];
+let readMs = 0, readStep = 0;
+function readTick() {
+  if (readStep >= READ_STEPS.length) return;
+  const tot = readMs + (playing ? performance.now() - playT0 : 0);
+  while (readStep < READ_STEPS.length && tot >= READ_STEPS[readStep][0] * 1000) track('lesezeit-' + READ_STEPS[readStep++][1]);
+}
 let stopNote = null;              // 'para' | 'end' | null
 let curHead = -2;
 const FOCAL = 0.38;               // entspricht --focal
@@ -1550,7 +1627,7 @@ function rememberDoc(d) {
   for (const id of Object.keys(POS)) if (!id.startsWith('sample') && !LIB.some(x => x.id === id)) delete POS[id];
   saveLib();
 }
-const docFromRec = r => ({ id: r.id, title: r.title, source: r.source, text: r.text, original: r.original || r.text, pos: POS[r.id] || 0 });
+const docFromRec = r => ({ id: r.id, title: r.title, source: r.source, text: r.text, original: r.original || r.text, pos: POS[r.id] || 0, lib: true });
 const sampleDoc = () => ({ id: 'sample', title: t('sample.title'), source: 'sample', text: SAMPLE[LANG], original: SAMPLE[LANG], pos: POS['sample.' + LANG] || 0 });
 function savePos() {
   if (!D || !M || !M.tokens.length) return;
@@ -1776,6 +1853,7 @@ function play() {
   if (playing || !M.tokens.length) return;
   if (pos >= M.tokens.length) { pos = 0; session = { ms: 0, words: 0 }; }
   stopNote = null; playing = true;
+  if (D && !startedDocs.has(D.id)) { startedDocs.add(D.id); track(D.id === 'sample' ? 'beispiel-gestartet' : D.lib ? 'weitergelesen' : 'lesen-gestartet'); }
   rampLeft = S.ramp && !autoTempo() ? 10 : 0;
   nextAt = performance.now(); playT0 = nextAt;
   toggleOutline(false);
@@ -1784,7 +1862,8 @@ function play() {
 function pause() {
   if (!playing) return;
   playing = false; clearTimeout(timer);
-  session.ms += performance.now() - playT0;
+  const dt = performance.now() - playT0;
+  session.ms += dt; readMs += dt; readTick();
   syncPlay(); wake(false);
   if (stopNote === 'para') showParaCard();
   else if (stopNote !== 'end') render(pos);
@@ -1793,6 +1872,7 @@ function pause() {
 const toggle = () => (playing ? pause() : play());
 function step() {
   if (!playing) return;
+  readTick();
   render(pos);
   let d = tokenDelay(M.tokens[pos]);
   if (rampLeft > 0) { d *= 1 + 0.6 * (rampLeft / 10); rampLeft--; }
@@ -2024,6 +2104,7 @@ async function importFile(file) {
     if (ext === 'md' || ext === 'markdown') text = stripMarkdown(text);
     if (!text.trim()) { toast(t('t.fileEmpty'), 'error'); return; }
     openDoc({ id: newId(), title: /^\s*#{1,6}\s/m.test(text) ? titleFromText(text) : base, source: 'text', text, original: text, pos: 0 });
+    track('text-geladen');
     toast(t('t.fileLoaded', { words: unit('word', M.words), name }));
     return;
   }
@@ -2040,6 +2121,7 @@ $('#paste-go').addEventListener('click', () => {
   if (!text.trim()) { toast(t('t.pasteEmpty'), 'error'); ta.focus(); return; }
   closePanel(false); ta.value = '';
   openDoc({ id: newId(), title: titleFromText(text), source: 'text', text, original: text, pos: 0 });
+  track('text-geladen');
   toast(t('t.pasteReady', { words: unit('word', M.words) }));
 });
 $('#open-sample').addEventListener('click', () => { closePanel(false); sampleAuto = true; openDoc(sampleDoc()); });
@@ -2055,7 +2137,7 @@ function renderLibrary() {
     const sub = document.createElement('span'); sub.className = 'sub';
     const pct = rec.tokens > 1 ? Math.min(100, Math.round((POS[rec.id] || 0) / (rec.tokens - 1) * 100)) : 0;
     const date = rec.updatedAt ? new Date(rec.updatedAt).toLocaleDateString(LOCALE[LANG], { day: 'numeric', month: 'short' }) : '';
-    sub.textContent = t('lib.sub', { words: unit('word', rec.words || 0), p: pct }) + (date ? ' · ' + date : '');
+    sub.textContent = t('lib.sub', { words: unit('word', rec.words || 0), p: pct }) + (date ? ', ' + date : '');
     open.append(ttl, sub);
     open.addEventListener('click', () => {
       closePanel(false);

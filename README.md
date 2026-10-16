@@ -1,6 +1,6 @@
 # GOATreader
 
-GOATreader shows PDFs and texts one word at a time, with a focus letter, sentence rewind, a context view and honest speed numbers. Everything runs in the browser: texts are never uploaded, and there are no cookies, no tracking and no requests to other servers.
+GOATreader lets you read PDFs and texts faster: one word at a time, with a focus letter, sentence rewind, a context view and honest speed numbers. Everything runs in the browser: texts are never uploaded, there are no cookies and no tracking of individuals, and all files come from this server. On goatreader.app only, visits, a few fixed events (PDF loaded, text loaded, reading started) and rough time steps (page visible 10 s to 60 min, reading 15 s to 60 min) are counted anonymously with GoatCounter (EU servers), never texts, titles or file names; Do Not Track, Global Privacy Control and an opt-out on the privacy page are respected.
 
 The site is fully static (HTML, CSS, JavaScript). It needs no server code, no database and no build step, so any static host works.
 
@@ -80,5 +80,6 @@ Die Seite richtet sich nach der Browsersprache: Ist Deutsch die erste bevorzugte
 - Impressum und Datenschutzerklärung enthalten deinen Namen, deine Anschrift und hello@goatreader.app. Bei der Datenschutzerklärung ist die deutsche Fassung maßgeblich.
 - Beide Seiten sind für Suchmaschinen gesperrt (`noindex`). Das hält seriöse Suchmaschinen fern, verbirgt die Anschrift aber nicht vollständig: Das Repository ist öffentlich, und Webarchive können die Seiten speichern.
 - Solange GOATreader kostenlos und werbefrei ist, ist vertretbar, dass Name, Anschrift und E-Mail genügen. Die Landesmedienanstalten sehen das strenger. Sobald du damit Geld verdienst (Werbung, Affiliate-Links, Bezahlfunktionen), brauchst du einen zweiten schnellen Kontaktweg, zum Beispiel eine Telefonnummer. Bei Bezahl-Abos kommen Widerrufsbelehrung, AGB und Kündigungsbutton dazu.
+- Die Besuchszählung läuft über GoatCounter (Konto goatreader.goatcounter.com, Betreiber Martin Tournoij in Irland, Server bei Hetzner in Deutschland und Finnland). Einen Vertrag zur Auftragsverarbeitung nennt GoatCounter nicht; das ist eine kleine formale Lücke. Der Kontoname steht in `GC_CODE` in tools/build_site.py.
 - Die Datenschutzerklärung geht davon aus, dass IONOS die Mails an hello@goatreader.app an ein Gmail-Postfach weiterleitet. Wenn du Hosting, E-Mail oder andere Dienste änderst (zum Beispiel Render statt GitHub Pages, Statistik-Tools, Newsletter), muss sie angepasst werden.
 - Wenn du GOATreader über Instagram bewirbst, verlinke dort auch das Impressum, zum Beispiel über den Link in der Bio.

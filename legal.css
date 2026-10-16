@@ -24,3 +24,9 @@ a:focus-visible{outline:2px solid var(--pencil);outline-offset:2px}
 .muted{color:var(--ink-2);font-size:14px}
 .address{padding:14px 16px;border:1px solid var(--rule);border-radius:10px;background:var(--sheet)}
 .other{margin-top:36px;padding-top:14px;border-top:1px solid var(--rule);font-size:14px}
+.optout{display:none}
+.js .optout{display:block}
+.optout .state{font-weight:600}
+.optout button{margin-left:6px;border:1px solid var(--rule);border-radius:8px;background:var(--sheet);color:var(--ink);font:inherit;font-size:14px;padding:3px 10px;cursor:pointer}
+.optout button:hover{border-color:var(--pencil);color:var(--pencil)}
+.optout button:focus-visible{outline:2px solid var(--pencil);outline-offset:2px}

@@ -63,6 +63,24 @@
   }));
   document.documentElement.classList.add('js');
   show(lang);
+  // Opt-out der anonymen Zählung (nur auf der Datenschutzseite)
+  const NC = 'goatreader.nocount';
+  const signal = () => navigator.globalPrivacyControl === true || [navigator.doNotTrack, window.doNotTrack, navigator.msDoNotTrack].some(v => v === '1' || v === 'yes');
+  function syncOpt() {
+    let off = false;
+    try { off = localStorage.getItem(NC) === '1'; } catch { /* kein Speicher */ }
+    document.querySelectorAll('.optout').forEach(box => {
+      const sig = signal(), b = box.querySelector('button');
+      box.querySelector('.state').textContent = sig ? box.dataset.signal : off ? box.dataset.off : box.dataset.on;
+      b.textContent = off ? b.dataset.enable : b.dataset.disable;
+      b.hidden = sig;
+    });
+  }
+  document.querySelectorAll('.optout button').forEach(b => b.addEventListener('click', () => {
+    try { if (localStorage.getItem(NC) === '1') localStorage.removeItem(NC); else localStorage.setItem(NC, '1'); } catch { /* kein Speicher */ }
+    syncOpt();
+  }));
+  syncOpt();
 })();
 </script>
 </body>
