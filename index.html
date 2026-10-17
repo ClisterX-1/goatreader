@@ -41,6 +41,8 @@
   --pencil-ink:#FFFFFF;
   --pencil-soft:#DCE5F4;
   --danger:#A3261B;
+  --ok:#1C7A3E;         /* richtige Antwort */
+  --ok-soft:#DDEFE2;
   --scrim:rgba(19,26,34,.32);
   --shadow:0 1px 2px rgba(19,26,34,.06),0 14px 36px rgba(19,26,34,.12);
   --font-read:"Literata","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
@@ -52,14 +54,14 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --paper:#0E141A; --sheet:#151D25; --ink:#E3E8ED; --ink-2:#A2AEBA; --ink-3:#6E7A86; --rule:#2A3541;
-    --mark:#FF5B67; --pencil:#8AB1EE; --pencil-ink:#0B1117; --pencil-soft:#1D2B3C; --danger:#FF8A7A;
+    --mark:#FF5B67; --pencil:#8AB1EE; --pencil-ink:#0B1117; --pencil-soft:#1D2B3C; --danger:#FF8A7A; --ok:#6FCF8E; --ok-soft:#16301F;
     --scrim:rgba(0,0,0,.55); --shadow:0 1px 2px rgba(0,0,0,.45),0 14px 36px rgba(0,0,0,.45);
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --paper:#0E141A; --sheet:#151D25; --ink:#E3E8ED; --ink-2:#A2AEBA; --ink-3:#6E7A86; --rule:#2A3541;
-  --mark:#FF5B67; --pencil:#8AB1EE; --pencil-ink:#0B1117; --pencil-soft:#1D2B3C; --danger:#FF8A7A;
+  --mark:#FF5B67; --pencil:#8AB1EE; --pencil-ink:#0B1117; --pencil-soft:#1D2B3C; --danger:#FF8A7A; --ok:#6FCF8E; --ok-soft:#16301F;
   --scrim:rgba(0,0,0,.55); --shadow:0 1px 2px rgba(0,0,0,.45),0 14px 36px rgba(0,0,0,.45);
   color-scheme:dark;
 }
@@ -79,8 +81,12 @@ button,input,textarea,select{font:inherit;color:inherit}
 
 /* ---------- top bar ---------- */
 .bar{display:flex;align-items:center;gap:12px;width:min(1000px,100%);margin-inline:auto;padding-block:12px 6px}
-.brand{display:flex;align-items:center;gap:9px;flex:none}
+.brand{display:flex;align-items:center;gap:9px;flex:none;background:none;border:0;padding:4px 6px;margin-left:-6px;border-radius:8px;cursor:pointer;color:inherit}
+@media (hover:hover){.brand:hover{background:var(--sheet)}}
 .brand svg{width:22px;height:22px;color:var(--mark)}
+.brand svg.back{display:none;width:18px;height:18px;margin-right:-5px;color:var(--ink-2)}
+body:not([data-view="home"]) .brand svg.back{display:block}
+.lang{margin-left:auto}
 .brand-name{font-family:var(--font-read);font-weight:600;font-size:19px;letter-spacing:.01em}
 .brand-lite{font-weight:400}
 .doc{display:flex;align-items:center;gap:8px;min-width:0;flex:1;color:var(--ink-2);font-size:14px;overflow:hidden;container-type:inline-size}
@@ -99,10 +105,10 @@ button,input,textarea,select{font:inherit;color:inherit}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:40px;padding:0 14px;border-radius:8px;
   border:1px solid var(--rule);background:var(--sheet);cursor:pointer;font-weight:500;font-size:14px;white-space:nowrap;
   transition:border-color .15s,background-color .15s}
-.btn:hover{border-color:var(--ink-3)}
+@media (hover:hover){.btn:hover{border-color:var(--ink-3)}}
 .btn svg{width:18px;height:18px;flex:none}
 .btn.ghost{background:transparent;border-color:transparent}
-.btn.ghost:hover{background:var(--sheet);border-color:var(--rule)}
+@media (hover:hover){.btn.ghost:hover{background:var(--sheet);border-color:var(--rule)}}
 .btn.primary{background:var(--pencil);border-color:var(--pencil);color:var(--pencil-ink)}
 .btn.primary:hover{filter:brightness(1.06)}
 .btn.icon{width:40px;padding:0}
@@ -254,8 +260,92 @@ textarea{width:100%;border:1px solid var(--rule);border-radius:8px;background:va
   background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:10px;box-shadow:var(--shadow);font-size:14px}
 .toast[data-kind="error"]{background:var(--danger);color:#fff}
 
+/* ---------- start page: two ways in ---------- */
+.home{display:flex;flex-direction:column;gap:20px;padding-top:4px}
+.hero{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding-block:8px 2px}
+.hero h1:focus{outline:none}
+.hero h1{margin:0;font-family:var(--font-read);font-weight:600;font-size:clamp(1.85rem,5vw,2.8rem);line-height:1.12;letter-spacing:-.01em;text-wrap:balance}
+.hero p{margin:0;max-width:60ch;color:var(--ink-2);font-size:16.5px;text-wrap:pretty}
+.intro-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin-top:2px}
+.resume{display:flex;align-items:center;gap:12px;padding:12px 14px 12px 16px;border:1px solid var(--pencil);border-radius:12px;background:var(--sheet)}
+.resume-info{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+.resume-title{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.resume-sub{font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.choice{display:flex;flex-direction:column;gap:12px;min-width:0;padding:20px;border:1px solid var(--rule);border-radius:14px;background:var(--sheet);box-shadow:0 1px 2px rgba(19,26,34,.05)}
+.choice-head{display:flex;align-items:center;gap:10px}
+.choice-head svg{width:26px;height:26px;flex:none;color:var(--pencil)}
+.choice h2{margin:0;font-family:var(--font-read);font-size:21px;font-weight:600;line-height:1.25}
+.choice-desc{margin:0;color:var(--ink-2)}
+.file-btn{position:relative}
+.file-btn:focus-within{outline:2px solid var(--pencil);outline-offset:2px}
+.or{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3)}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--rule)}
+#home-paste{min-height:104px}
+.levels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:end;gap:8px;height:86px}
+.levels span{display:flex;align-items:flex-end;justify-content:center;padding-bottom:7px;border-radius:8px 8px 4px 4px;background:var(--pencil-soft);
+  color:var(--pencil);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.levels span:nth-child(1){height:42%}.levels span:nth-child(2){height:60%}.levels span:nth-child(3){height:80%}.levels span:nth-child(4){height:100%}
+.levels span.done{background:var(--pencil);color:var(--pencil-ink)}
+.ranks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:-6px;font-size:12px;line-height:1.25;color:var(--ink-3);text-align:center}
+.ranks span.done{color:var(--pencil);font-weight:600}
+.paste-box{display:flex;flex-direction:column;gap:12px}
+.paste-open{display:none}
+#test-exit{margin-left:auto}
+#test-exit:not([hidden]) ~ .lang{margin-left:0}
+.keyhint{display:none}
+@media (hover:hover) and (pointer:fine){.keyhint{display:block}}
+
+/* ---------- GOAT test: question and result ---------- */
+.stage{width:min(640px,100%);margin-inline:auto;display:flex;flex-direction:column;gap:14px;padding:22px;border:1px solid var(--rule);border-radius:14px;background:var(--sheet)}
+.stage h2{margin:0;font-family:var(--font-read);font-weight:600;font-size:clamp(1.25rem,3.4vw,1.6rem);line-height:1.3;text-wrap:balance}
+.stage h2:focus{outline:none}
+.stage .rank{font-size:clamp(2rem,6.5vw,2.9rem);line-height:1.1}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opts .btn{justify-content:flex-start;gap:12px;height:auto;min-height:50px;padding:10px 14px;text-align:left;white-space:normal;font-size:15.5px;line-height:1.35}
+.opts .k{flex:none;display:inline-grid;place-items:center;width:24px;height:24px;border:1px solid var(--rule);border-radius:6px;font-size:12px;font-weight:600;color:var(--ink-2)}
+.opts .btn:disabled{opacity:.55;cursor:default}
+.opts .btn.ok{opacity:1;border-color:var(--ok);background:var(--ok-soft)}
+.opts .btn.no{opacity:1;border-color:var(--danger)}
+.fb{margin:0;font-weight:600}
+.fb.ok{color:var(--ok)}
+.fb.no{color:var(--danger)}
+.res-main{margin:0;font-size:16.5px}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.steps li{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px;border:1px solid var(--rule);border-radius:10px;background:var(--paper);
+  font-size:12.5px;color:var(--ink-2);text-align:center}
+.steps b{font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums}
+.steps li.ok{border-color:var(--ok);background:var(--ok-soft)}
+.steps li.no{border-color:var(--danger)}
+.steps li.open{opacity:.6}
+
+/* ---------- reading window during the test: fixed speed, no jumping ---------- */
+body[data-view="test"] #btn-prev,body[data-view="test"] #btn-next,body[data-view="test"] #wpm-up,body[data-view="test"] #wpm-down{display:none}
+body[data-view="test"] .ruler{pointer-events:none}
+body[data-view="test"] .section-btn svg{display:none}
+
+/* ---------- one-time tips (one tap hides all of them) ---------- */
+.tip{display:flex;align-items:center;gap:10px 14px;padding:10px 10px 10px 14px;border-radius:10px;background:var(--pencil-soft);font-size:14px}
+.tip p{margin:0;flex:1;min-width:0}
+.tip .btn{flex:none}
+body.is-playing .tip{display:none}
+
 @media (max-width:480px){.brand-name{display:none}}
+@media (max-width:760px){
+  .choices{grid-template-columns:minmax(0,1fr)}
+  .paste-open{display:inline-flex}
+  .choice:not(.pasting) .paste-box{display:none}   /* Handy: Feld erst nach „Text einfügen“ */
+  .levels{height:70px}
+  #choice-train .row{order:1}                      /* Handy: Start-Knopf vor der Grafik, damit er früh im Bild ist */
+  #choice-train .levels{order:2}
+  #choice-train .ranks{order:3}
+  #test-best{order:4}
+}
 @media (max-width:640px){
+  .choice,.stage{padding:16px}
+  .hero p{font-size:15.5px}
+  .resume{flex-wrap:wrap;padding:12px 14px}
+  .resume .btn{flex:1}
   .bar{gap:8px}
   .bar-actions{gap:2px}
   .bar-actions .btn{flex-direction:column;gap:3px;height:46px;min-width:44px;padding:0 4px}
@@ -272,6 +362,9 @@ textarea{width:100%;border:1px solid var(--rule);border-radius:8px;background:va
   /* schmale Handys: Satz-Knöpfe nur mit Symbol (Beschriftung bleibt als aria-label und title) */
   .tgroup .btn:not(.play){width:46px;height:46px;padding:0}
   .tgroup .btn:not(.play) span{display:none}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #test-exit span{display:none}
+  #test-exit{width:40px;padding:0}
 }
 @media (prefers-reduced-motion:reduce){
   *{transition:none!important;animation:none!important}
@@ -347,16 +440,20 @@ textarea{width:100%;border:1px solid var(--rule);border-radius:8px;background:va
 <noscript><p class="noscript">GOATreader braucht JavaScript.<br><span lang="en">GOATreader needs JavaScript to run.</span></p></noscript>
 <div class="app" id="app">
   <header class="bar">
-    <div class="brand">
+    <button class="brand" id="go-home" type="button" aria-label="Home" title="Home" data-i18n-attr="aria-label:bar.home;title:bar.home">
+      <svg class="back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 5h20M2 19h20M9 5v4M9 19v-4" stroke-linecap="round"/><path d="M9 12h0" stroke-width="3.2" stroke-linecap="round"/></svg>
       <span class="brand-name">GOAT<span class="brand-lite">reader</span></span>
-    </div>
-    <div class="doc"><span class="doc-title" id="doc-title"></span><span class="chip" id="doc-chip" data-i18n="doc.sampleChip" hidden>Sample</span></div>
+    </button>
+    <div class="doc" id="doc"><span class="doc-title" id="doc-title"></span><span class="chip" id="doc-chip" hidden></span></div>
+    <button class="btn ghost small" id="test-exit" type="button" hidden aria-label="Quit test" title="Quit test" data-i18n-attr="aria-label:test.exit;title:test.exit">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg><span data-i18n="test.exit">Quit test</span>
+    </button>
     <div class="lang" role="group" aria-label="Language" data-i18n-attr="aria-label:bar.lang">
       <button type="button" data-lang="en" lang="en" title="English" aria-pressed="true">EN</button>
       <button type="button" data-lang="de" lang="de" title="Deutsch" aria-pressed="false">DE</button>
     </div>
-    <nav class="bar-actions" aria-label="Document" data-i18n-attr="aria-label:bar.nav">
+    <nav class="bar-actions" id="bar-actions" aria-label="Document" data-i18n-attr="aria-label:bar.nav">
       <button class="btn ghost" id="open-load" type="button" aria-label="Load a text" title="Load a text" data-i18n-attr="aria-label:bar.load.title;title:bar.load.title">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M4 15v4h16v-4"/></svg><span data-i18n="bar.load">Load</span>
       </button>
@@ -370,10 +467,58 @@ textarea{width:100%;border:1px solid var(--rule);border-radius:8px;background:va
   </header>
 
   <main class="main">
-    <section class="instrument" aria-label="Reading window" data-i18n-attr="aria-label:reader.region">
+    <section class="home" id="home" aria-labelledby="home-title">
+      <div class="hero">
+        <h1 id="home-title" tabindex="-1" data-i18n="home.title">Speed reading for everyone</h1>
+        <p data-i18n="home.sub">Read your own texts faster, or find out how fast you read right now. Free, no account needed.</p>
+        <div class="intro-row">
+          <button class="btn" id="intro-start" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg><span data-i18n="home.intro">New here? See how it works</span></button>
+          <span class="note" id="intro-time"></span>
+        </div>
+      </div>
+      <div class="resume" id="resume" hidden>
+        <div class="resume-info"><span class="label" data-i18n="home.resume">Continue reading</span><span class="resume-title" id="resume-title"></span><span class="resume-sub" id="resume-sub"></span></div>
+        <button class="btn primary" id="resume-go" type="button"><span data-i18n="home.resume.go">Continue</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </div>
+      <div class="choices">
+        <section class="choice" id="choice-read" aria-labelledby="choice-read-h">
+          <div class="choice-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5.5c2.6-1 5.6-1 9 1 3.4-2 6.4-2 9-1v13c-2.6-1-5.6-1-9 1-3.4-2-6.4-2-9-1z"/><path d="M12 6.5v13"/></svg><h2 id="choice-read-h" data-i18n="home.read.title">Read your own text</h2></div>
+          <p class="choice-desc" data-i18n="home.read.desc">Open a PDF, Word or Pages file, or simply paste text. Everything stays on your device.</p>
+          <div class="row">
+            <label class="btn primary file-btn"><input class="sr-only" type="file" id="home-file" accept=".pdf,.docx,.doc,.pages,.txt,.md,.markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.apple.pages,application/x-iwork-pages-sffpages,text/plain,text/markdown"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 17v-6M9.5 13.5 12 11l2.5 2.5"/></svg><span data-i18n="home.read.file">Open file</span></label>
+            <button class="btn paste-open" id="home-paste-open" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-2"/></svg><span data-i18n="home.paste.label">Paste text</span></button>
+            <span class="note" data-i18n="home.read.types">PDF, Word, Pages, TXT</span>
+          </div>
+          <div class="paste-box">
+          <div class="or"><span data-i18n="home.or">or</span></div>
+          <label class="label" for="home-paste" data-i18n="home.paste.label">Paste text</label>
+          <textarea id="home-paste" placeholder="Paste your text here" data-i18n-attr="placeholder:home.paste.ph"></textarea>
+          <div class="row">
+            <button class="btn" id="home-clip" type="button" hidden aria-label="Paste text from the clipboard" title="Paste text from the clipboard" data-i18n-attr="aria-label:home.paste.clip.aria;title:home.paste.clip.aria"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-2"/></svg><span data-i18n="home.paste.clip">Paste</span></button>
+            <button class="btn primary" id="home-go" type="button" disabled><span data-i18n="home.paste.go">Read</span></button>
+            <span class="note" id="home-count" aria-live="polite"></span>
+          </div>
+          <p class="note keyhint" id="home-key"></p>
+          </div>
+        </section>
+        <section class="choice" id="choice-train" aria-labelledby="choice-train-h">
+          <div class="choice-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5l3.5-3.5M10 2.5h4M12 2.5V6"/></svg><h2 id="choice-train-h" data-i18n="home.train.title">Train and test</h2></div>
+          <p class="choice-desc" data-i18n="home.train.desc">How fast do you really read? Four short texts, each one faster than the last, with a question after each.</p>
+          <div class="levels" id="levels" role="img" aria-label="Four levels: 300, 400, 500 and 600 words per minute" data-i18n-attr="aria-label:home.train.levels"><span>300</span><span>400</span><span>500</span><span>600</span></div>
+          <div class="ranks" id="ranks" aria-hidden="true"><span data-i18n="rank.1">Little goat</span><span data-i18n="rank.2">Mountain goat</span><span data-i18n="rank.3">Summit goat</span><span data-i18n="rank.4">GOAT</span></div>
+          <div class="row">
+            <button class="btn primary" id="test-start" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4h11l-2 4 2 4H5"/></svg><span data-i18n="home.train.go">Start the GOAT test</span></button>
+            <span class="note" data-i18n="home.train.time">Takes about two minutes.</span>
+          </div>
+          <p class="note" id="test-best" hidden></p>
+        </section>
+      </div>
+    </section>
+
+    <section class="instrument" aria-label="Reading window" data-i18n-attr="aria-label:reader.region" hidden>
       <div class="eyebrow">
         <button class="section-btn" id="section-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="outline">
-          <span class="label" id="section-label">Section</span><span class="section-name" id="section-name">–</span>
+          <span class="label" id="section-label">Section</span><span class="section-name" id="section-name"></span>
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>
         </button>
         <span class="page-label" id="page-label" hidden></span>
@@ -416,15 +561,44 @@ textarea{width:100%;border:1px solid var(--rule);border-radius:8px;background:va
           <button class="btn" id="wpm-up" type="button" aria-label="Faster (↑)" title="Faster (↑)" data-i18n-attr="aria-label:tempo.faster;title:tempo.faster">+</button>
         </div>
       </div>
+      <div class="tip" id="tip" role="note" hidden><p id="tip-text"></p><button class="btn small" id="tip-ok" type="button" aria-label="OK, hide tips" title="OK, hide tips" data-i18n-attr="aria-label:tip.ok.aria;title:tip.ok.aria"><span data-i18n="tip.ok">OK</span></button></div>
     </section>
 
-    <section class="context" id="context" aria-label="In context" data-i18n-attr="aria-label:ctx.label">
+    <section class="context" id="context" aria-label="In context" data-i18n-attr="aria-label:ctx.label" hidden>
       <div class="context-head"><span class="label" data-i18n="ctx.label">In context</span><span class="hint" data-i18n="ctx.hint">Tap a word to jump there</span></div>
       <h3 class="context-section" id="context-section" hidden></h3>
       <p class="context-text" id="context-text"></p>
     </section>
 
-    <p class="keys" data-i18n-html="keys"><span><kbd>Space</kbd> start/pause</span><span><kbd>←</kbd> <kbd>→</kbd> previous/next sentence</span><span><kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd> one word</span><span><kbd>↑</kbd> <kbd>↓</kbd> speed</span></p>
+    <section class="stage" id="quiz" aria-labelledby="quiz-q" hidden>
+      <span class="label" id="quiz-kicker"></span>
+      <h2 id="quiz-q" tabindex="-1"></h2>
+      <div class="opts" id="quiz-opts"></div>
+      <p class="fb" id="quiz-fb" role="status"></p>
+      <div class="row"><button class="btn primary" id="quiz-next" type="button" aria-describedby="quiz-fb" hidden></button></div>
+      <p class="note keyhint" data-i18n="quiz.keys">Tip: answer with 1, 2 or 3 and continue with Enter.</p>
+    </section>
+
+    <section class="stage" id="result" aria-labelledby="result-rank" hidden>
+      <span class="label" data-i18n="res.kicker">Your result</span>
+      <h2 class="rank" id="result-rank" tabindex="-1"></h2>
+      <p class="res-main" id="result-main"></p>
+      <ol class="steps" id="result-steps"></ol>
+      <p class="note" id="result-eff"></p>
+      <p class="note" id="result-best" hidden></p>
+      <p class="note" id="result-cmp" data-i18n="res.cmp">For comparison: adults read English texts silently at about 240 words per minute on average (Brysbaert 2019).</p>
+      <p class="note" data-i18n="res.tip">Tip: for dense texts like papers, start a little slower and speed up step by step.</p>
+      <div class="row">
+        <button class="btn primary" id="result-share" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><span data-i18n="res.share">Share result</span></button>
+        <button class="btn" id="result-again" type="button" data-i18n="res.again">Test again</button>
+      </div>
+      <div class="row">
+        <button class="btn" id="result-read" type="button" data-i18n="res.read">Read your own text</button>
+        <button class="btn ghost" id="result-home" type="button" data-i18n="res.home">Back to start</button>
+      </div>
+    </section>
+
+    <p class="keys" hidden data-i18n-html="keys"><span><kbd>Space</kbd> start/pause</span><span><kbd>←</kbd> <kbd>→</kbd> previous/next sentence</span><span><kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd> one word</span><span><kbd>↑</kbd> <kbd>↓</kbd> speed</span></p>
     <footer class="foot"><span data-i18n="foot.privacy">Your texts stay in your browser. Nothing is uploaded.</span><span><a href="legal.html" data-i18n="foot.legal">Legal notice</a></span><span><a href="privacy.html" data-i18n="foot.privacyLink">Privacy</a></span></footer>
   </main>
 </div>
@@ -439,9 +613,9 @@ textarea{width:100%;border:1px solid var(--rule);border-radius:8px;background:va
     <div class="group">
       <label class="drop" for="file-input">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 17v-6M9.5 13.5 12 11l2.5 2.5"/></svg>
-        <strong data-i18n="load.choose">Choose a PDF, TXT or Markdown file</strong>
+        <strong data-i18n="load.choose">Choose a file: PDF, Word, Pages, TXT or Markdown</strong>
         <span class="note" data-i18n="load.drop">or drop the file anywhere on this page</span>
-        <input class="sr-only" type="file" id="file-input" data-autofocus accept=".pdf,.txt,.md,.markdown,application/pdf,text/plain,text/markdown">
+        <input class="sr-only" type="file" id="file-input" data-autofocus accept=".pdf,.docx,.doc,.pages,.txt,.md,.markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.apple.pages,application/x-iwork-pages-sffpages,text/plain,text/markdown">
       </label>
       <p class="note" data-i18n="load.note">For PDFs, headers and footers, hyphenation, citation brackets and the reference list are removed. You can adjust this under “Text”.</p>
     </div>
@@ -480,7 +654,7 @@ textarea{width:100%;border:1px solid var(--rule);border-radius:8px;background:va
       </div>
     </div>
     <div class="group" id="clean-box">
-      <span class="label" data-i18n="clean.title">PDF clean-up</span>
+      <span class="label" data-i18n="clean.title">Clean-up</span>
       <label class="check"><input type="checkbox" id="opt-dropRunning"><span data-i18n="clean.running">Remove headers, footers, page numbers and formula fragments</span></label>
       <label class="check"><input type="checkbox" id="opt-dropCites"><span data-i18n="clean.cites">Hide citation brackets and footnote numbers</span><span class="help" data-i18n="clean.cites.help">e.g. [12] or (Rayner et al., 2016)</span></label>
       <label class="check"><input type="checkbox" id="opt-dropRefs"><span data-i18n="clean.refs">Leave out the reference list</span></label>
@@ -542,6 +716,7 @@ textarea{width:100%;border:1px solid var(--rule);border-radius:8px;background:va
 
 <div class="drop-overlay" id="drop-overlay" hidden><div data-i18n="drop.release">Drop to load</div></div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<textarea class="sr-only" id="paste-catcher" tabindex="-1" aria-hidden="true"></textarea>
 
 <script>
 (() => {
@@ -600,9 +775,9 @@ const I18N = {
     'keys': '<span><kbd>Space</kbd> start/pause</span><span><kbd>←</kbd> <kbd>→</kbd> previous/next sentence</span><span><kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd> one word</span><span><kbd>↑</kbd> <kbd>↓</kbd> speed</span>',
     'close': 'Close',
     'load.title': 'Load text',
-    'load.choose': 'Choose a PDF, TXT or Markdown file',
+    'load.choose': 'Choose a file: PDF, Word, Pages, TXT or Markdown',
     'load.drop': 'or drop the file anywhere on this page',
-    'load.note': 'When you load a PDF, {app} removes headers and footers, line-break hyphens, in-text citations and the reference list. You can adjust this under “Text”.',
+    'load.note': 'When you load a PDF, {app} removes headers and footers, line-break hyphens, in-text citations and the reference list. From Word and Pages files, {app} takes the running text without headers, footers, footnotes and comments. You can adjust this under “Text”.',
     'load.paste': 'Paste text',
     'load.paste.ph': 'Paste your text here. Blank lines separate paragraphs; lines starting with # become headings.',
     'load.paste.go': 'Read this text',
@@ -621,7 +796,7 @@ const I18N = {
     'edit.apply': 'Apply',
     'edit.copy': 'Copy text',
     'edit.restore': 'Restore original',
-    'clean.title': 'PDF clean-up',
+    'clean.title': 'Clean-up',
     'clean.running': 'Remove headers, footers, page numbers and formula fragments',
     'clean.cites': 'Remove in-text citations and footnote numbers',
     'clean.cites.help': 'e.g. [12] or (Rayner et al., 2016)',
@@ -629,7 +804,7 @@ const I18N = {
     'clean.heads': 'Detect headings',
     'clean.heads.help': 'for the outline and the section display',
     'clean.again': 'Clean up again',
-    'clean.note': 'Applies to the next PDF you load. To clean up a PDF from “Recently read” again, load the file once more.',
+    'clean.note': 'Applies to the next file you load. To clean up a file from “Recently read” again, load it once more.',
     'set.title': 'Speed and display',
     'set.speed': 'Speed',
     'set.wpm': 'Words per minute',
@@ -698,7 +873,7 @@ const I18N = {
     't.fileReadFail': 'The file could not be read.',
     't.fileEmpty': 'The file is empty.',
     't.fileLoaded': 'Loaded {words} from “{name}”.',
-    't.fileUnsupported': '{app} cannot read this format yet. Use a PDF, TXT or MD file, or paste the text.',
+    't.fileUnsupported': '{app} cannot read this format yet. Use a PDF, Word, Pages, TXT or MD file, or paste the text.',
     't.pasteEmpty': 'Paste some text first.',
     't.pasteReady': '{words} ready. Tap “Read” or press Space.',
     't.editEmpty': 'The text is empty.',
@@ -710,7 +885,128 @@ const I18N = {
     't.defaults': 'Defaults restored.',
     'foot.privacy': 'Your texts stay in your browser. Nothing is uploaded.',
     'foot.legal': 'Legal notice',
-    'foot.privacyLink': 'Privacy'
+    'foot.privacyLink': 'Privacy',
+    'bar.home': 'GOATreader, start page',
+    'home.title': 'Speed reading for everyone',
+    'home.sub': 'Read your own texts faster, or find out how fast you read right now. Free, no account needed.',
+    'home.intro': 'New here? See how it works',
+    'home.intro.time': '{t} to read along',
+    'home.resume': 'Continue reading',
+    'home.resume.go': 'Continue',
+    'home.read.title': 'Read your own text',
+    'home.read.desc': 'Open a PDF, Word or Pages file, or simply paste text. Everything stays on your device.',
+    'home.read.file': 'Open file',
+    'home.read.types': 'PDF, Word, Pages, TXT',
+    'home.or': 'or',
+    'home.paste.label': 'Paste text',
+    'home.paste.ph': 'Paste your text here',
+    'home.paste.clip': 'Paste',
+    'home.paste.clip.aria': 'Paste text from the clipboard',
+    'home.paste.go': 'Read',
+    'home.paste.count': '{words}, about {t} at {wpm} wpm',
+    'home.paste.key': 'Tip: press {key} anywhere on this page, and the text you copied starts right away.',
+    'key.paste': 'Ctrl+V',
+    'home.train.title': 'Train and test',
+    'home.train.desc': 'How fast do you really read? Four short texts, each one faster than the last, with a question after each.',
+    'home.train.levels': 'Four levels: 300, 400, 500 and 600 words per minute',
+    'home.train.go': 'Start the GOAT test',
+    'home.train.time': 'Takes about two minutes.',
+    'home.train.best': 'Your best so far: {wpm} words per minute',
+    'test.title': 'GOAT test',
+    'test.exit': 'Quit test',
+    'test.eyebrow': 'Level {k} of {n}',
+    'test.card.kicker': 'GOAT test, level {k} of {n}',
+    'test.card.title': '{wpm} words per minute',
+    'test.card.sub': 'Read the short text. A question follows. Tap the reading window or press Space to start.',
+    'quiz.kicker': 'Level {k} of {n}, {wpm} words per minute',
+    'quiz.ok.next': 'Correct! Next up: {wpm} words per minute.',
+    'quiz.ok.last': 'Correct! You made it through all four levels.',
+    'quiz.no': 'Not quite. The answer was: {a}',
+    'quiz.next': 'Next level',
+    'quiz.result': 'See your result',
+    'quiz.keys': 'Tip: answer with 1, 2 or 3 and continue with Enter.',
+    'quiz.sr.ok': 'correct answer',
+    'quiz.sr.mine': 'your answer',
+    'rank.0': 'Ready to start',
+    'rank.1': 'Little goat',
+    'rank.2': 'Mountain goat',
+    'rank.3': 'Summit goat',
+    'rank.4': 'GOAT',
+    'res.kicker': 'Your result',
+    'res.main': 'You understood the text at {wpm} words per minute.',
+    'res.main.all': 'You understood all four texts, even at {wpm} words per minute.',
+    'res.main0': '{wpm} words per minute didn’t work out yet. No problem: everyone starts at their own pace.',
+    'res.step.ok': 'understood',
+    'res.step.no': 'missed',
+    'res.step.open': 'not reached',
+    'res.eff': 'Including the pauses at sentence ends, that is about {e} words per minute.',
+    'res.cmp': 'For comparison: adults read English texts silently at about 240 words per minute on average (Brysbaert 2019).',
+    'res.best': 'Your best so far: {wpm} words per minute.',
+    'res.newbest': 'New personal best!',
+    'res.tip': 'Tip: for dense texts like papers, start a little slower and speed up step by step.',
+    'res.share': 'Share result',
+    'res.again': 'Test again',
+    'res.read': 'Read your own text',
+    'res.home': 'Back to start',
+    'res.share.text': 'GOAT test: understood at {wpm} words per minute, rank “{rank}”. How fast do you read?',
+    'res.share.text0': 'I’m training to read faster with the GOAT test. How far do you get?',
+    'tip.start.touch': 'Tap the reading window to start or pause. Swipe left or right to jump a sentence.',
+    'tip.start.keys': 'Press Space to start or pause. Use ← and → to jump a sentence, ↑ and ↓ to change the speed.',
+    'tip.ctx': 'While paused, you see the whole paragraph below. Tap any word to jump there.',
+    'tip.ok': 'OK',
+    'tip.ok.aria': 'OK, hide tips',
+    't.pasteUrl': 'That’s a web address. Copy the text of the page instead and paste it here.',
+    't.clipEmpty': 'There is no text in your clipboard. Copy some text first.',
+    't.clipManual': 'Paste the text into the field with {key}.',
+    't.clipManualTouch': 'Tap and hold in the field, then choose “Paste”.',
+    't.docReading': 'Reading the file…',
+    't.docOld': '{app} can’t read old Word files (.doc). Save the file as .docx or PDF in Word, then load it again.',
+    't.docxFail': 'This Word file could not be opened. If it is password-protected, save it without a password or as a PDF.',
+    't.pagesFail': 'This Pages file could not be read. Export it from Pages as a PDF or Word file and load that.',
+    't.zipBrowser': 'Your browser can’t unpack this file. Update your browser or save the file as a PDF.',
+    't.docNoText': 'No readable text was found in this file.',
+    't.shareCopied': 'Copied. Paste it wherever you like.',
+    't.shareManual': 'Your text to share: {text}',
+    'test.a1.text': 'Lina was at the bus stop at seven, waiting for the bus to campus. In her bag were an apple, a book and her keys. The bus came on time, but it was so full that she couldn’t get on. So she walked the two stops instead. On the way, she noticed that she had left her umbrella at home. Of course, it started to rain at exactly that moment. She reached the lecture hall wet, but on time.',
+    'test.a1.q': 'What had Lina left at home?',
+    'test.a1.ok': 'Her umbrella',
+    'test.a1.x1': 'Her keys',
+    'test.a1.x2': 'Her book',
+    'test.a2.text': 'Tom had signed up for a cooking class for the first time. On the menu was a vegetable soup with fresh bread. The teacher handed out carrots, potatoes and leeks to every group. Tom’s job was to chop the onions, and after just one minute, tears were running down his face. His partner laughed and handed him a pair of swimming goggles from her backpack. He looked strange in them, but at last he could keep chopping. In the end, their soup was the best in the whole class.',
+    'test.a2.q': 'What was Tom’s job in the class?',
+    'test.a2.ok': 'Chopping the onions',
+    'test.a2.x1': 'Peeling the carrots',
+    'test.a2.x2': 'Cutting the leeks',
+    'test.a3.text': 'On Saturday, Mira moved into her first own apartment on the fourth floor. Her friends carried boxes, a shelf and a heavy washing machine up the stairs, because the elevator was broken on that very day. When everything was upstairs, they ordered pizza for everyone. Only in the evening did Mira notice that the box with the plates and cups was still in the car. So everyone ate the pizza straight from the box and drank from the bottle. It was still the best meal of the week.',
+    'test.a3.q': 'What was broken on moving day?',
+    'test.a3.ok': 'The elevator',
+    'test.a3.x1': 'The washing machine',
+    'test.a3.x2': 'The car',
+    'test.a4.text': 'Jonas had had tickets for his favorite band’s concert for months. That evening, he stood right at the front of the stage with his sister. After the third song, the power suddenly went out, and the whole hall went dark. Nobody knew what would happen next. Then the singer simply kept singing without a microphone, and the audience quietly sang along. After ten minutes, the lights came back on. Later, Jonas said this quiet moment was the best part of the evening.',
+    'test.a4.q': 'What happened after the third song?',
+    'test.a4.ok': 'The power went out.',
+    'test.a4.x1': 'The band took a break.',
+    'test.a4.x2': 'It started to rain.',
+    'test.b1.text': 'On Sunday, the Berger family brought home a young dog from the animal shelter. He was brown, had one white ear and was called Bruno. The children had already bought a basket, a leash and a ball. But Bruno was only interested in one of Dad’s old slippers. He carried it proudly through the whole apartment and put it in his basket at night. Since then, Dad has been looking for his other slipper every morning.',
+    'test.b1.q': 'What was Bruno most interested in?',
+    'test.b1.ok': 'An old slipper',
+    'test.b1.x1': 'His new ball',
+    'test.b1.x2': 'The leash',
+    'test.b2.text': 'Sara wanted to study for her exam in peace at the library. She found a seat by the window, laid out her notes and put on her headphones. At the next table sat an older man reading a thick book about birds. After an hour, he fell asleep and started to snore quietly. Sara had to laugh so much that she had to leave the library. Outside, she kept studying on a bench, and it went surprisingly well.',
+    'test.b2.q': 'Where did Sara keep studying in the end?',
+    'test.b2.ok': 'On a bench outside',
+    'test.b2.x1': 'By the window in the library',
+    'test.b2.x2': 'At her desk at home',
+    'test.b3.text': 'Paul rode his bike to work every morning, even in wind and rain. One day, halfway there, he got a flat tire. He had no tools with him, and the office was still five kilometers away. Then a woman on a cargo bike with two children in it stopped next to him. She took a pump and a repair kit out of a box and helped him in a few minutes. Since then, Paul always carries a small pump in his backpack.',
+    'test.b3.q': 'What does Paul always carry since then?',
+    'test.b3.ok': 'A small pump',
+    'test.b3.x1': 'A spare tire',
+    'test.b3.x2': 'A rain jacket',
+    'test.b4.text': 'Emma was taking the train to a job interview in another city. Shortly before arriving, the train stopped in the middle of nowhere because of a signal fault. Emma called the company and explained that she would be late. The head of HR suggested simply doing the interview by video. So Emma sat down in the empty dining car and answered every question with her laptop on the table. A week later, she got the job.',
+    'test.b4.q': 'Where did Emma have the interview?',
+    'test.b4.ok': 'In the train’s dining car',
+    'test.b4.x1': 'At the company’s office',
+    'test.b4.x2': 'On the platform'
   },
   de: {
     'app.title': 'GOATreader: PDFs und Texte schneller lesen',
@@ -763,9 +1059,9 @@ const I18N = {
     'keys': '<span><kbd>Leertaste</kbd> Start/Pause</span><span><kbd>←</kbd> <kbd>→</kbd> vorheriger/nächster Satz</span><span><kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd> einzelnes Wort</span><span><kbd>↑</kbd> <kbd>↓</kbd> Tempo</span>',
     'close': 'Schließen',
     'load.title': 'Text laden',
-    'load.choose': 'PDF-, TXT- oder Markdown-Datei wählen',
+    'load.choose': 'Datei wählen: PDF, Word, Pages, TXT oder Markdown',
     'load.drop': 'oder die Datei irgendwo auf diese Seite ziehen',
-    'load.note': 'Beim Laden einer PDF entfernt {app} Kopf- und Fußzeilen, Trennstriche am Zeilenende, Quellenverweise und das Literaturverzeichnis. Das lässt sich unter „Text“ anpassen.',
+    'load.note': 'Beim Laden einer PDF entfernt {app} Kopf- und Fußzeilen, Trennstriche am Zeilenende, Quellenverweise und das Literaturverzeichnis. Aus Word- und Pages-Dateien übernimmt {app} den Fließtext ohne Kopf- und Fußzeilen, Fußnoten und Kommentare. Das lässt sich unter „Text“ anpassen.',
     'load.paste': 'Text einfügen',
     'load.paste.ph': 'Text hier einfügen. Leerzeilen trennen Absätze, Zeilen mit # am Anfang werden zu Überschriften.',
     'load.paste.go': 'Diesen Text lesen',
@@ -784,7 +1080,7 @@ const I18N = {
     'edit.apply': 'Übernehmen',
     'edit.copy': 'Text kopieren',
     'edit.restore': 'Original wiederherstellen',
-    'clean.title': 'PDF-Bereinigung',
+    'clean.title': 'Bereinigung',
     'clean.running': 'Kopf- und Fußzeilen, Seitenzahlen und Formelreste entfernen',
     'clean.cites': 'Quellenverweise und Fußnotenziffern entfernen',
     'clean.cites.help': 'z. B. [12] oder (Rayner et al., 2016)',
@@ -792,7 +1088,7 @@ const I18N = {
     'clean.heads': 'Überschriften erkennen',
     'clean.heads.help': 'für Gliederung und Abschnittsanzeige',
     'clean.again': 'Neu bereinigen',
-    'clean.note': 'Gilt für die nächste PDF, die du lädst. Um eine PDF aus „Zuletzt gelesen“ neu zu bereinigen, lade die Datei noch einmal.',
+    'clean.note': 'Gilt für die nächste Datei, die du lädst. Um eine Datei aus „Zuletzt gelesen“ neu zu bereinigen, lade sie noch einmal.',
     'set.title': 'Tempo und Anzeige',
     'set.speed': 'Tempo',
     'set.wpm': 'Wörter pro Minute',
@@ -861,7 +1157,7 @@ const I18N = {
     't.fileReadFail': 'Die Datei ließ sich nicht lesen.',
     't.fileEmpty': 'Die Datei ist leer.',
     't.fileLoaded': '{words} aus „{name}“ geladen.',
-    't.fileUnsupported': 'Dieses Format kann {app} noch nicht lesen. Nimm eine PDF-, TXT- oder MD-Datei oder füge den Text ein.',
+    't.fileUnsupported': 'Dieses Format kann {app} noch nicht lesen. Nimm eine PDF-, Word-, Pages-, TXT- oder MD-Datei oder füge den Text ein.',
     't.pasteEmpty': 'Füge zuerst einen Text ein.',
     't.pasteReady': '{words} bereit. Tippe auf „Lesen“ oder drück die Leertaste.',
     't.editEmpty': 'Der Text ist leer.',
@@ -873,7 +1169,128 @@ const I18N = {
     't.defaults': 'Standardwerte wiederhergestellt.',
     'foot.privacy': 'Deine Texte bleiben in deinem Browser. Nichts wird hochgeladen.',
     'foot.legal': 'Impressum',
-    'foot.privacyLink': 'Datenschutz'
+    'foot.privacyLink': 'Datenschutz',
+    'bar.home': 'GOATreader, Startseite',
+    'home.title': 'Speedreading für alle',
+    'home.sub': 'Lies deine eigenen Texte schneller oder finde heraus, wie schnell du gerade liest. Kostenlos und ohne Konto.',
+    'home.intro': 'Neu hier? So funktioniert’s',
+    'home.intro.time': '{t} zum Mitlesen',
+    'home.resume': 'Weiterlesen',
+    'home.resume.go': 'Weiter',
+    'home.read.title': 'Eigenen Text lesen',
+    'home.read.desc': 'Öffne ein PDF, eine Word- oder Pages-Datei oder füge einfach Text ein. Alles bleibt auf deinem Gerät.',
+    'home.read.file': 'Datei öffnen',
+    'home.read.types': 'PDF, Word, Pages, TXT',
+    'home.or': 'oder',
+    'home.paste.label': 'Text einfügen',
+    'home.paste.ph': 'Text hier einfügen',
+    'home.paste.clip': 'Einfügen',
+    'home.paste.clip.aria': 'Text aus der Zwischenablage einfügen',
+    'home.paste.go': 'Lesen',
+    'home.paste.count': '{words}, etwa {t} bei {wpm} wpm',
+    'home.paste.key': 'Tipp: Drück irgendwo auf dieser Seite {key}, und dein kopierter Text startet sofort.',
+    'key.paste': 'Strg+V',
+    'home.train.title': 'Trainieren und testen',
+    'home.train.desc': 'Wie schnell liest du wirklich? Vier kurze Texte, jeder schneller als der davor, nach jedem eine Frage.',
+    'home.train.levels': 'Vier Stufen: 300, 400, 500 und 600 Wörter pro Minute',
+    'home.train.go': 'GOAT-Test starten',
+    'home.train.time': 'Dauert etwa zwei Minuten.',
+    'home.train.best': 'Dein Rekord: {wpm} Wörter pro Minute',
+    'test.title': 'GOAT-Test',
+    'test.exit': 'Test beenden',
+    'test.eyebrow': 'Stufe {k} von {n}',
+    'test.card.kicker': 'GOAT-Test, Stufe {k} von {n}',
+    'test.card.title': '{wpm} Wörter pro Minute',
+    'test.card.sub': 'Lies den kurzen Text. Danach kommt eine Frage. Tippe aufs Lesefenster oder drück die Leertaste.',
+    'quiz.kicker': 'Stufe {k} von {n}, {wpm} Wörter pro Minute',
+    'quiz.ok.next': 'Richtig! Weiter geht’s mit {wpm} Wörtern pro Minute.',
+    'quiz.ok.last': 'Richtig! Du hast alle vier Stufen geschafft.',
+    'quiz.no': 'Leider nicht. Richtig war: {a}',
+    'quiz.next': 'Nächste Stufe',
+    'quiz.result': 'Zum Ergebnis',
+    'quiz.keys': 'Tipp: Antworte mit 1, 2 oder 3 und mach mit Enter weiter.',
+    'quiz.sr.ok': 'richtige Antwort',
+    'quiz.sr.mine': 'deine Antwort',
+    'rank.0': 'Startklar',
+    'rank.1': 'Zicklein',
+    'rank.2': 'Bergziege',
+    'rank.3': 'Gipfelziege',
+    'rank.4': 'GOAT',
+    'res.kicker': 'Dein Ergebnis',
+    'res.main': 'Du hast den Text bei {wpm} Wörtern pro Minute verstanden.',
+    'res.main.all': 'Du hast alle vier Texte verstanden, sogar bei {wpm} Wörtern pro Minute.',
+    'res.main0': 'Bei {wpm} Wörtern pro Minute hat es noch nicht geklappt. Kein Problem: Jeder fängt bei seinem Tempo an.',
+    'res.step.ok': 'verstanden',
+    'res.step.no': 'daneben',
+    'res.step.open': 'nicht erreicht',
+    'res.eff': 'Mit den Pausen an den Satzenden sind das etwa {e} Wörter pro Minute.',
+    'res.cmp': 'Zum Vergleich: Erwachsene lesen englische Texte still im Schnitt mit etwa 240 Wörtern pro Minute (Brysbaert 2019).',
+    'res.best': 'Dein bisheriger Rekord: {wpm} Wörter pro Minute.',
+    'res.newbest': 'Neuer persönlicher Rekord!',
+    'res.tip': 'Tipp: Bei dichten Texten wie Fachartikeln starte etwas langsamer und steigere dich Schritt für Schritt.',
+    'res.share': 'Ergebnis teilen',
+    'res.again': 'Nochmal testen',
+    'res.read': 'Eigenen Text lesen',
+    'res.home': 'Zur Startseite',
+    'res.share.text': 'GOAT-Test: verstanden bei {wpm} Wörtern pro Minute, Rang „{rank}“. Wie schnell liest du?',
+    'res.share.text0': 'Ich trainiere schnelles Lesen mit dem GOAT-Test. Wie weit kommst du?',
+    'tip.start.touch': 'Tippe aufs Lesefenster zum Starten und Pausieren. Wisch nach links oder rechts, um einen Satz zu springen.',
+    'tip.start.keys': 'Leertaste startet und pausiert. Mit ← und → springst du einen Satz, mit ↑ und ↓ änderst du das Tempo.',
+    'tip.ctx': 'In der Pause siehst du unten den ganzen Absatz. Tippe ein Wort an, um dorthin zu springen.',
+    'tip.ok': 'OK',
+    'tip.ok.aria': 'OK, Hinweise ausblenden',
+    't.pasteUrl': 'Das ist eine Webadresse. Kopier lieber den Text der Seite und füge ihn hier ein.',
+    't.clipEmpty': 'In deiner Zwischenablage ist kein Text. Kopier zuerst einen Text.',
+    't.clipManual': 'Füge den Text mit {key} in das Feld ein.',
+    't.clipManualTouch': 'Halte den Finger ins Feld und wähle „Einfügen“.',
+    't.docReading': 'Datei wird gelesen …',
+    't.docOld': 'Alte Word-Dateien (.doc) kann {app} nicht lesen. Speichere die Datei in Word als .docx oder PDF und lade sie dann noch einmal.',
+    't.docxFail': 'Diese Word-Datei ließ sich nicht öffnen. Falls sie passwortgeschützt ist, speichere sie ohne Passwort oder als PDF.',
+    't.pagesFail': 'Diese Pages-Datei ließ sich nicht lesen. Exportiere sie in Pages als PDF oder Word und lade diese Datei.',
+    't.zipBrowser': 'Dein Browser kann diese Datei nicht entpacken. Aktualisiere den Browser oder speichere die Datei als PDF.',
+    't.docNoText': 'In dieser Datei wurde kein lesbarer Text gefunden.',
+    't.shareCopied': 'Kopiert. Füg es ein, wo du willst.',
+    't.shareManual': 'Dein Text zum Teilen: {text}',
+    'test.a1.text': 'Lina stand um sieben an der Haltestelle und wartete auf den Bus zur Uni. In ihrer Tasche waren ein Apfel, ein Buch und ihr Schlüssel. Der Bus kam pünktlich, war aber so voll, dass sie nicht einsteigen konnte. Also ging sie die zwei Stationen zu Fuß. Unterwegs merkte sie, dass sie ihren Regenschirm zu Hause vergessen hatte. Natürlich fing es genau in diesem Moment an zu regnen. Sie kam nass, aber pünktlich im Hörsaal an.',
+    'test.a1.q': 'Was hatte Lina zu Hause vergessen?',
+    'test.a1.ok': 'Ihren Regenschirm',
+    'test.a1.x1': 'Ihren Schlüssel',
+    'test.a1.x2': 'Ihr Buch',
+    'test.a2.text': 'Tom hatte sich zum ersten Mal für einen Kochkurs angemeldet. Auf dem Plan stand eine Gemüsesuppe mit frischem Brot. Die Kursleiterin verteilte Karotten, Kartoffeln und Lauch an alle Gruppen. Tom sollte die Zwiebeln schneiden, und schon nach einer Minute liefen ihm Tränen über das Gesicht. Seine Partnerin lachte und reichte ihm eine Taucherbrille aus ihrem Rucksack. Damit sah er seltsam aus, aber er konnte endlich weiterschneiden. Am Ende war ihre Suppe die beste im ganzen Kurs.',
+    'test.a2.q': 'Was sollte Tom im Kurs schneiden?',
+    'test.a2.ok': 'Die Zwiebeln',
+    'test.a2.x1': 'Die Karotten',
+    'test.a2.x2': 'Den Lauch',
+    'test.a3.text': 'Am Samstag zog Mira in ihre erste eigene Wohnung im vierten Stock. Ihre Freunde trugen Kisten, ein Regal und eine schwere Waschmaschine die Treppe hinauf, denn ausgerechnet an diesem Tag war der Aufzug kaputt. Als alles oben war, bestellten sie Pizza für alle. Erst am Abend fiel Mira auf, dass die Kiste mit den Tellern und Tassen noch im Auto lag. Also aßen alle die Pizza direkt aus dem Karton und tranken aus der Flasche. Es war trotzdem das beste Essen der Woche.',
+    'test.a3.q': 'Was war am Umzugstag kaputt?',
+    'test.a3.ok': 'Der Aufzug',
+    'test.a3.x1': 'Die Waschmaschine',
+    'test.a3.x2': 'Das Auto',
+    'test.a4.text': 'Jonas hatte seit Monaten Karten für das Konzert seiner Lieblingsband. Am Abend stand er mit seiner Schwester ganz vorne an der Bühne. Nach dem dritten Lied fiel plötzlich der Strom aus, und die ganze Halle wurde dunkel. Niemand wusste, was jetzt passieren würde. Da sang die Sängerin einfach ohne Mikrofon weiter, und das Publikum sang leise mit. Nach zehn Minuten ging das Licht wieder an. Später sagte Jonas, dieser stille Moment sei der schönste Teil des Abends gewesen.',
+    'test.a4.q': 'Was passierte nach dem dritten Lied?',
+    'test.a4.ok': 'Der Strom fiel aus.',
+    'test.a4.x1': 'Die Band machte eine Pause.',
+    'test.a4.x2': 'Es fing an zu regnen.',
+    'test.b1.text': 'Familie Berger holte am Sonntag einen jungen Hund aus dem Tierheim. Er war braun, hatte ein weißes Ohr und hieß Bruno. Die Kinder hatten schon ein Körbchen, eine Leine und einen Ball gekauft. Doch Bruno interessierte sich nur für einen alten Hausschuh von Papa. Den trug er stolz durch die ganze Wohnung und legte ihn abends in sein Körbchen. Seitdem sucht Papa jeden Morgen seinen zweiten Schuh.',
+    'test.b1.q': 'Wofür interessierte sich Bruno am meisten?',
+    'test.b1.ok': 'Für einen alten Hausschuh',
+    'test.b1.x1': 'Für seinen neuen Ball',
+    'test.b1.x2': 'Für die Leine',
+    'test.b2.text': 'Sara wollte in der Bibliothek in Ruhe für ihre Prüfung lernen. Sie suchte sich einen Platz am Fenster, legte ihre Notizen bereit und setzte die Kopfhörer auf. Am Nachbartisch saß ein älterer Herr, der ein dickes Buch über Vögel las. Nach einer Stunde schlief er ein und begann leise zu schnarchen. Sara musste so lachen, dass sie die Bibliothek verlassen musste. Draußen auf einer Bank lernte sie weiter, und es klappte überraschend gut.',
+    'test.b2.q': 'Wo lernte Sara am Ende weiter?',
+    'test.b2.ok': 'Auf einer Bank draußen',
+    'test.b2.x1': 'Am Fenster in der Bibliothek',
+    'test.b2.x2': 'Zu Hause am Schreibtisch',
+    'test.b3.text': 'Paul fuhr jeden Morgen mit dem Fahrrad zur Arbeit, auch bei Wind und Regen. Eines Tages hatte er auf halber Strecke einen platten Reifen. Werkzeug hatte er nicht dabei, und bis zum Büro waren es noch fünf Kilometer. Da hielt neben ihm eine Frau mit einem Lastenrad, in dem zwei Kinder saßen. Sie holte eine Pumpe und Flickzeug aus einer Kiste und half ihm in wenigen Minuten. Seitdem hat Paul immer eine kleine Pumpe in seinem Rucksack.',
+    'test.b3.q': 'Was hat Paul seitdem immer dabei?',
+    'test.b3.ok': 'Eine kleine Pumpe',
+    'test.b3.x1': 'Einen Ersatzreifen',
+    'test.b3.x2': 'Eine Regenjacke',
+    'test.b4.text': 'Emma fuhr mit dem Zug zu einem Vorstellungsgespräch in einer anderen Stadt. Kurz vor dem Ziel blieb der Zug auf freier Strecke stehen, weil ein Signal gestört war. Emma rief bei der Firma an und erklärte, dass sie sich verspäten würde. Die Personalchefin schlug vor, das Gespräch einfach per Video zu führen. Also setzte sich Emma in den leeren Speisewagen und beantwortete alle Fragen mit dem Laptop auf dem Tisch. Eine Woche später bekam sie die Zusage.',
+    'test.b4.q': 'Wo führte Emma das Gespräch?',
+    'test.b4.ok': 'Im Speisewagen des Zuges',
+    'test.b4.x1': 'Im Büro der Firma',
+    'test.b4.x2': 'Auf dem Bahnsteig'
   }
 };
 
@@ -900,7 +1317,7 @@ Now 500. Getting tight? Good. This is where it's decided whether you're reading 
 
 You become a GOAT in small steps. Tap plus or minus, or use the up and down arrow keys, to change the speed by ten. Stay at a speed until it feels easy, then push on. Pro tip: under “Speed”, turn on “Stop after each paragraph” and sum up the key point in one sentence. That's how it sticks.
 
-Your turn. Under “Load” you can open a PDF or paste text, and on a computer you can simply drop a file here. For papers, ${APP} clears out headers and footers, page numbers, line-break hyphens, in-text citations and the reference list. What's left is the text. And you.`,
+Your turn. Under “Load” you can open a PDF, Word or Pages file or paste text, and on a computer you can simply drop a file here. For papers, ${APP} clears out headers and footers, page numbers, line-break hyphens, in-text citations and the reference list. What's left is the text. And you.`,
   de: `# Bereit, wie ein GOAT zu lesen?
 
 Achtung: Dieser Text wird mit jedem Abschnitt schneller. Du musst nichts tun. Nur dranbleiben.
@@ -923,7 +1340,7 @@ Jetzt 500. Wird es eng? Gut so. Genau hier entscheidet sich, ob du liest oder nu
 
 Zum GOAT wirst du in kleinen Schritten. Mit Plus und Minus oder den Pfeiltasten nach oben und unten änderst du das Tempo um zehn. Bleib bei einem Tempo, bis es sich leicht anfühlt, dann leg nach. Profi-Tipp: Schalte unter „Tempo“ die Option „Nach jedem Absatz anhalten“ ein und sag dir die Kernaussage in einem Satz. So bleibt sie hängen.
 
-Jetzt du. Unter „Laden“ öffnest du ein PDF oder fügst Text ein, am Computer ziehst du eine Datei einfach hierher. Bei Fachartikeln räumt ${APP} Kopf- und Fußzeilen, Seitenzahlen, Trennstriche am Zeilenende, Quellenverweise und das Literaturverzeichnis weg. Was bleibt, ist der Text. Und du.`
+Jetzt du. Unter „Laden“ öffnest du ein PDF, eine Word- oder Pages-Datei oder fügst Text ein, am Computer ziehst du eine Datei einfach hierher. Bei Fachartikeln räumt ${APP} Kopf- und Fußzeilen, Seitenzahlen, Trennstriche am Zeilenende, Quellenverweise und das Literaturverzeichnis weg. Was bleibt, ist der Text. Und du.`
 };
 
 let LANG = 'en';
@@ -982,15 +1399,6 @@ const store = {
 
 // ================= settings =================
 const K = { set: 'goatreader.settings.v1', lib: 'goatreader.library.v1', cur: 'goatreader.current.v1', pos: 'goatreader.positions.v1', lang: 'goatreader.lang' };
-// Einmalige Übernahme der Daten aus der früheren Version „Wortstrom“
-try {
-  if (localStorage.getItem(K.lib) == null && localStorage.getItem('wortstrom.library.v1') != null) {
-    for (const k of ['settings', 'library', 'current', 'positions']) {
-      const v = localStorage.getItem(`wortstrom.${k}.v1`);
-      if (v != null) localStorage.setItem(`goatreader.${k}.v1`, v);
-    }
-  }
-} catch { /* kein Speicher verfügbar */ }
 const DEFAULTS = { wpm: 300, sentPause: 1, clausePause: 0.4, paraPause: 1.5, longWords: true, ramp: true, paraStop: false,
   font: 'serif', size: 1, mark: true, guides: true, dropRunning: true, dropCites: true, dropRefs: true, headings: true };
 const S = Object.assign({}, DEFAULTS);
@@ -1124,14 +1532,15 @@ function parseText(raw) {
 }
 
 // Anzeigedauer eines Tokens in ms
-function delayOf(tk, wpm = S.wpm) {
+// o: Pausen-Einstellungen (beim GOAT-Test immer die Standardwerte, damit alle dasselbe Tempo bekommen)
+function delayOf(tk, wpm = S.wpm, o = S) {
   const base = 60000 / wpm;
   if (tk.kind === 'h') return Math.max(800, base * (2.5 + tk.nw * 1.2));
   let d = base;
-  if (S.longWords && tk.letters > 8) d *= 1 + Math.min(0.6, (tk.letters - 8) * 0.07);
-  if (tk.endSent) d += base * S.sentPause;
-  else if (tk.endClause) d += base * S.clausePause;
-  if (tk.endPara) d += base * S.paraPause;
+  if (o.longWords && tk.letters > 8) d *= 1 + Math.min(0.6, (tk.letters - 8) * 0.07);
+  if (tk.endSent) d += base * o.sentPause;
+  else if (tk.endClause) d += base * o.clausePause;
+  if (tk.endPara) d += base * o.paraPause;
   return d;
 }
 const totalTime = model => model.tokens.reduce((s, tk) => s + delayOf(tk), 0);
@@ -1512,23 +1921,25 @@ function cleanPdf(raw, o) {
   };
 }
 
-async function importPdf(file, fileTitle) {
+async function importPdf(file, fileTitle, gen = importGen) {
   busy(t('t.pdfLoading'));
   let lib;
   try { lib = await loadPdfJs(); }
-  catch { toast(t('t.pdfToolFail'), 'error', 7000); return; }
+  catch { if (!stale(gen)) toast(t('t.pdfToolFail'), 'error', 7000); return; }
+  if (stale(gen)) return;
   let pdf;
   try {
     const data = new Uint8Array(await file.arrayBuffer());
     pdf = await lib.getDocument({ data, isEvalSupported: false, disableFontFace: true, verbosity: 0 }).promise;
   } catch (err) {
-    toast(t(err && err.name === 'PasswordException' ? 't.pdfPassword' : 't.pdfOpenFail'), 'error', 7000);
+    if (!stale(gen)) toast(t(err && err.name === 'PasswordException' ? 't.pdfPassword' : 't.pdfOpenFail'), 'error', 7000);
     return;
   }
   const n = pdf.numPages, pages = [];
   let chars = 0;
   try {
     for (let p = 1; p <= n; p++) {
+      if (stale(gen)) { try { pdf.destroy(); } catch {} return; }   // inzwischen etwas anderes geöffnet
       busy(t('t.pdfPage', { p: fmtN(p), n: fmtN(n) }));
       const page = await pdf.getPage(p);
       const tc = await page.getTextContent();
@@ -1547,12 +1958,426 @@ async function importPdf(file, fileTitle) {
   try { const meta = await pdf.getMetadata(); metaTitle = String(meta?.info?.Title || ''); } catch {}
   try { pdf.destroy(); } catch {}
   if (chars < 30 * n) { toast(t('t.pdfScanned'), 'error', 8000); return; }
+  if (stale(gen)) return;
   const raw = { pages, metaTitle, fileTitle };
   const res = cleanPdf(raw, S);
   if (!res.text.trim()) { toast(t('t.pdfNoText'), 'error', 7000); return; }
   openDoc({ id: newId(), title: res.title, source: 'pdf', text: res.text, original: res.text, raw, pos: 0 });
   track('pdf-geladen');
   toast(t('t.pdfLoaded', { words: unit('word', M.words), pages: unit('page', n) }), 'info', 6500);
+}
+
+// ================= Word und Pages =================
+// Beides sind ZIP-Archive. Gelesen wird ohne Bibliothek: das Zentralverzeichnis direkt, gepackte Einträge über DecompressionStream.
+const u16 = (b, i) => b[i] | (b[i + 1] << 8);
+const u32 = (b, i) => (b[i] | (b[i + 1] << 8) | (b[i + 2] << 16)) + b[i + 3] * 16777216;
+const u64 = (b, i) => u32(b, i) + u32(b, i + 4) * 4294967296;
+const UTF8 = new TextDecoder('utf-8');
+function zipIndex(buf) {
+  const n = buf.length;
+  let e = -1;
+  for (let i = n - 22; i >= Math.max(0, n - 65557); i--) {
+    if (buf[i] === 0x50 && buf[i + 1] === 0x4b && buf[i + 2] === 5 && buf[i + 3] === 6) { e = i; break; }
+  }
+  if (e < 0) throw new Error('zip');
+  let count = u16(buf, e + 10), p = u32(buf, e + 16);
+  if (p === 0xffffffff || count === 0xffff) {   // ZIP64
+    const l = e - 20;
+    if (l >= 0 && u32(buf, l) === 0x07064b50) {
+      const z = u64(buf, l + 8);
+      if (z + 56 <= n && u32(buf, z) === 0x06064b50) { count = u64(buf, z + 32); p = u64(buf, z + 48); }
+    }
+  }
+  const files = new Map();
+  for (let k = 0; k < count && p + 46 <= n && u32(buf, p) === 0x02014b50; k++) {
+    const nl = u16(buf, p + 28), xl = u16(buf, p + 30), cl = u16(buf, p + 32);
+    const ent = { flags: u16(buf, p + 8), method: u16(buf, p + 10), csize: u32(buf, p + 20), size: u32(buf, p + 24), off: u32(buf, p + 42) };
+    for (let x = p + 46 + nl, xe = x + xl; x + 4 <= xe; x += 4 + u16(buf, x + 2)) {
+      if (u16(buf, x) !== 1) continue;   // ZIP64-Angaben zu Größe und Lage
+      let q = x + 4;
+      if (ent.size === 0xffffffff) { ent.size = u64(buf, q); q += 8; }
+      if (ent.csize === 0xffffffff) { ent.csize = u64(buf, q); q += 8; }
+      if (ent.off === 0xffffffff) ent.off = u64(buf, q);
+    }
+    files.set(UTF8.decode(buf.subarray(p + 46, p + 46 + nl)), ent);
+    p += 46 + nl + xl + cl;
+  }
+  if (!files.size) throw new Error('zip');
+  return files;
+}
+async function inflateRaw(data) {
+  let ds;
+  try { ds = new DecompressionStream('deflate-raw'); } catch { throw new Error('no-inflate'); }
+  return new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(ds)).arrayBuffer());
+}
+async function zipFile(buf, files, name) {
+  const ent = files.get(name);
+  if (!ent) return null;
+  if (ent.flags & 1) throw new Error('encrypted');
+  if (u32(buf, ent.off) !== 0x04034b50) throw new Error('zip');
+  const start = ent.off + 30 + u16(buf, ent.off + 26) + u16(buf, ent.off + 28);
+  const data = buf.subarray(start, start + ent.csize);
+  if (ent.method === 0) return data;
+  if (ent.method === 8) return inflateRaw(data);
+  throw new Error('zip');
+}
+const zipText = async (buf, files, name) => { const d = await zipFile(buf, files, name); return d ? UTF8.decode(d) : null; };
+
+// --- XML: kleiner Durchlauf in Dokumentreihenfolge (reicht für die Office-Teile, kein DOM nötig) ---
+const XML_ENT = { lt: '<', gt: '>', amp: '&', quot: '"', apos: "'" };
+function xmlUnescape(s) {
+  if (s.indexOf('&') < 0) return s;
+  return s.replace(/&(#[xX][0-9a-fA-F]+|#\d+|\w+);/g, (m, e) => {
+    if (e[0] !== '#') return XML_ENT[e] ?? m;
+    const c = e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+    return c > 0 && c <= 0x10ffff ? String.fromCodePoint(c) : '';
+  });
+}
+// fn(art, name, attribute oder Text): art 1 = Start-Tag, 2 = End-Tag, 3 = leeres Element, 0 = Text
+const XML_RE = /<!--[\s\S]*?-->|<\?[\s\S]*?\?>|<!\[CDATA\[([\s\S]*?)\]\]>|<!(?:[^>"']|"[^"]*"|'[^']*')*>|<(\/?)([^\s/>]+)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>|([^<]+)/g;
+function xmlWalk(xml, fn) {
+  const re = new RegExp(XML_RE.source, 'g');
+  for (let m; (m = re.exec(xml)); ) {
+    if (m[6] != null) fn(0, '', xmlUnescape(m[6]));
+    else if (m[1] != null) fn(0, '', m[1]);
+    else if (m[3]) fn(m[2] ? 2 : m[5] ? 3 : 1, m[3], m[4] || '');
+  }
+}
+const ATTR_RE = new Map();
+function xmlAttr(attrs, name) {
+  let re = ATTR_RE.get(name);
+  if (!re) ATTR_RE.set(name, re = new RegExp(`(?:^|\\s)${name.replace(/[.:]/g, c => '\\' + c)}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`));
+  const m = re.exec(attrs);
+  return m ? xmlUnescape(m[1] ?? m[2]) : null;
+}
+// Präfix des WordprocessingML-Namensraums (fast immer „w“); Namen werden auf „w:“ vereinheitlicht
+function wordNs(xml) {
+  const head = xml.slice(0, 6000);
+  let pre = 'w';
+  for (const m of head.matchAll(/xmlns:([\w.-]+)\s*=\s*["']([^"']+)["']/g)) {
+    if (/^http:\/\/(schemas\.openxmlformats\.org\/wordprocessingml\/2006\/main|purl\.oclc\.org\/ooxml\/wordprocessingml\/main)$/.test(m[2])) { pre = m[1]; break; }
+  }
+  return { el: n => (pre !== 'w' && n.startsWith(pre + ':') ? 'w:' + n.slice(pre.length + 1) : n), at: (a, local) => xmlAttr(a, pre + ':' + local) };
+}
+
+// --- Word (.docx) ---
+const HEAD_STYLE = /^(?:heading|überschrift|titre|título|titolo|kop)\s*([1-9])$/i;
+const TITLE_STYLE = /^(?:title|titel|titre|título|titolo)$/i;
+const TOC_STYLE = /^(?:toc\s*(?:[1-9]|heading)|verzeichnis\s*[1-9]|inhaltsverzeichnis\w*|inhaltsverzeichnisüberschrift|table of contents)$/i;
+function docxStyles(xml) {
+  const ns = wordNs(xml), map = new Map();
+  let cur = null;
+  xmlWalk(xml, (k, raw, a) => {
+    if (!k) return;
+    const n = ns.el(raw);
+    if (n === 'w:style') {
+      if (k === 1) cur = { id: ns.at(a, 'styleId'), name: '', based: '', outline: null };
+      else if (k === 2) { if (cur && cur.id) map.set(cur.id, cur); cur = null; }
+      return;
+    }
+    if (!cur || k === 2) return;
+    if (n === 'w:name') cur.name = ns.at(a, 'val') || '';
+    else if (n === 'w:basedOn') cur.based = ns.at(a, 'val') || '';
+    else if (n === 'w:outlineLvl') { const v = parseInt(ns.at(a, 'val'), 10); if (v >= 0) cur.outline = v; }
+  });
+  return map;
+}
+// Gliederungsebene einer Formatvorlage: 0 bis 8 = Überschrift, -1 = Fließtext, -2 = Verzeichniszeile (weglassen)
+function styleLevel(styles, id) {
+  for (let s = styles.get(id), d = 0; s && d < 12; s = styles.get(s.based), d++) {
+    if (TOC_STYLE.test(s.name)) return -2;
+    if (s.outline != null) return s.outline < 9 ? s.outline : -1;
+    const h = HEAD_STYLE.exec(s.name);
+    if (h) return +h[1] - 1;
+    if (TITLE_STYLE.test(s.name)) return 0;
+  }
+  return -1;
+}
+// Nicht gelesen: gelöschter oder verschobener Text, Grafiken und Textfelder, Feldbefehle, Ausweichinhalte
+const DOCX_SKIP = new Set(['w:del', 'w:moveFrom', 'w:delText', 'w:instrText', 'w:fldData', 'w:drawing', 'w:pict', 'w:object', 'w:txbxContent', 'mc:Fallback']);
+function docxBlocks(xml, styles) {
+  const ns = wordNs(xml), paras = [], tables = [];
+  let skip = 0, p = null, run = null, inPPr = false, inRPr = false, inT = false, rendered = 0;
+  xmlWalk(xml, (k, raw, a) => {
+    if (!k) { if (inT && p && !skip && !(run && run.hidden)) p.text += a; return; }
+    const n = ns.el(raw);
+    if (DOCX_SKIP.has(n)) { if (k === 1) skip++; else if (k === 2) skip = Math.max(0, skip - 1); return; }
+    if (skip) return;
+    const open = k !== 2;
+    switch (n) {
+      case 'w:p': if (k === 1) p = { text: '', style: '', outline: null }; else if (k === 2 && p) { paras.push(p); p = null; } break;
+      case 'w:pPr': inPPr = k === 1; break;
+      case 'w:pStyle': if (p && inPPr && open) p.style = ns.at(a, 'val') || ''; break;
+      case 'w:outlineLvl': if (p && inPPr && open) { const v = parseInt(ns.at(a, 'val'), 10); if (v >= 0) p.outline = v; } break;
+      case 'w:r': run = k === 1 ? { hidden: false } : null; inRPr = false; break;
+      case 'w:rPr': inRPr = k === 1 && !!run; break;
+      case 'w:vanish': case 'w:specVanish': if (run && inRPr && open) run.hidden = !/^(0|false|off)$/i.test(ns.at(a, 'val') || ''); break;
+      case 'w:t': inT = k === 1; break;
+      case 'w:tab': case 'w:cr': if (p && run && open) p.text += ' '; break;
+      case 'w:br': if (p && run && open) p.text += ns.at(a, 'type') === 'page' ? ' \u0001P ' : ' '; break;
+      case 'w:noBreakHyphen': if (p && run && open) p.text += '-'; break;
+      case 'w:lastRenderedPageBreak': if (p && open) { p.text += ' \u0001L '; rendered++; } break;
+      case 'w:tbl':
+        if (k === 1) tables.push({ first: paras.length, cells: 0 });
+        else if (k === 2 && tables.length) {
+          // Tabellen mit wenig Text je Zelle (Zahlen, Stichworte) überspringen, Fließtext in Tabellen behalten
+          const tb = tables.pop(), ps = paras.slice(tb.first);
+          const words = ps.reduce((s, x) => s + (x.text.match(/\p{L}{2,}/gu) || []).length, 0);
+          if (words < Math.max(1, tb.cells) * 12) for (const x of ps) x.drop = true;
+        }
+        break;
+      case 'w:tc': if (k === 1 && tables.length) tables[tables.length - 1].cells++; break;
+    }
+  });
+  // Seitenmarken: Seitenumbrüche aus Words letzter Darstellung, sonst die festen Seitenumbrüche
+  const kind = rendered ? 'L' : 'P';
+  const breaks = paras.some(x => x.text.includes('\u0001' + kind));
+  let page = 1, carry = breaks ? '⟦1⟧' : '';
+  const blocks = [];
+  for (const x of paras) {
+    let text = x.text.replace(/\u0001([LP])/g, (m, c) => (c === kind ? ` ⟦${++page}⟧ ` : ' ')).replace(/\s+/g, ' ').trim();
+    const level = x.outline != null ? (x.outline < 9 ? x.outline : -1) : styleLevel(styles, x.style);
+    const plain = text.replace(PAGE_ANY, ' ').trim();
+    if (x.drop || level === -2 || !plain) {   // Seitenmarken weggelassener Absätze wandern zum nächsten Absatz
+      const ms = text.match(PAGE_ANY);
+      if (ms) carry = ms[ms.length - 1];
+      continue;
+    }
+    if (carry) { text = carry + ' ' + text; carry = ''; }
+    const tail = /\s*(⟦\d+⟧)$/.exec(text);   // Umbruch am Absatzende: Marke an den Anfang des nächsten Absatzes
+    if (tail && tail.index > 0) { carry = tail[1]; text = text.slice(0, tail.index); }
+    blocks.push({ h: level >= 0 && plain.length <= 160, text });
+  }
+  return blocks;
+}
+async function docxRead(buf) {
+  const files = zipIndex(buf);
+  const target = async (relsPath, type, fallback, base) => {
+    const rels = await zipText(buf, files, relsPath);
+    let out = fallback;
+    if (rels) xmlWalk(rels, (k, name, a) => {
+      if (k && /(^|:)Relationship$/.test(name) && new RegExp(`/${type}$`).test(xmlAttr(a, 'Type') || '')) {
+        const tg = xmlAttr(a, 'Target') || '';
+        if (tg) out = tg.startsWith('/') ? tg.slice(1) : base + tg;
+      }
+    });
+    return out;
+  };
+  const main = await target('_rels/.rels', 'officeDocument', 'word/document.xml', '');
+  const xml = await zipText(buf, files, main);
+  if (xml == null) throw new Error('docx');
+  const cut = main.lastIndexOf('/') + 1, dir = main.slice(0, cut);
+  const stylesPath = await target(dir + '_rels/' + main.slice(cut) + '.rels', 'styles', dir + 'styles.xml', dir);
+  const styles = docxStyles((await zipText(buf, files, stylesPath)) || '');
+  const core = await zipText(buf, files, 'docProps/core.xml');
+  const tm = core && /<dc:title[^>]*>([\s\S]*?)<\/dc:title>/.exec(core);
+  return { kind: 'blocks', blocks: docxBlocks(xml, styles), metaTitle: tm ? xmlUnescape(tm[1]).trim() : '' };
+}
+
+// --- Pages: Index/*.iwa = Snappy-komprimierte Protobuf-Nachrichten (Format wie bei Numbers und Keynote) ---
+function pbVarint(b, p) {
+  let x = 0, m = 1, c;
+  do { c = b[p++]; x += (c & 127) * m; m *= 128; } while (c & 128 && p < b.length);
+  return [x, p];
+}
+function pbFields(b) {
+  const out = [];
+  let p = 0, key, v;
+  while (p < b.length) {
+    [key, p] = pbVarint(b, p);
+    const f = Math.floor(key / 8), w = key % 8;
+    if (w === 0) { [v, p] = pbVarint(b, p); out.push({ f, w, v }); }
+    else if (w === 2) { [v, p] = pbVarint(b, p); if (p + v > b.length) throw new Error('pb'); out.push({ f, w, v: b.subarray(p, p + v) }); p += v; }
+    else if (w === 1) p += 8;
+    else if (w === 5) p += 4;
+    else throw new Error('pb');
+  }
+  return out;
+}
+const pbRef = b => { for (const x of pbFields(b)) if (x.f === 1 && x.w === 0) return x.v; return 0; };
+function unsnappy(src) {
+  let [len, p] = pbVarint(src, 0);
+  if (len > 1 << 28) throw new Error('snappy');
+  const out = new Uint8Array(len);
+  let o = 0;
+  while (p < src.length) {
+    const tag = src[p++], kind = tag & 3;
+    if (kind === 0) {
+      let n = tag >>> 2;
+      if (n >= 60) { const bytes = n - 59; n = 0; for (let i = 0; i < bytes; i++) n += src[p++] * 2 ** (8 * i); }
+      n += 1;
+      if (p + n > src.length || o + n > len) throw new Error('snappy');
+      out.set(src.subarray(p, p + n), o); p += n; o += n;
+      continue;
+    }
+    let n, off;
+    if (kind === 1) { n = ((tag >>> 2) & 7) + 4; off = ((tag >>> 5) << 8) | src[p++]; }
+    else if (kind === 2) { n = (tag >>> 2) + 1; off = u16(src, p); p += 2; }
+    else { n = (tag >>> 2) + 1; off = u32(src, p); p += 4; }
+    if (!off || off > o || o + n > len) throw new Error('snappy');
+    for (let i = 0; i < n; i++, o++) out[o] = out[o - off];
+  }
+  if (o !== len) throw new Error('snappy');
+  return out;
+}
+// Blöcke: 0x00, Länge (3 Byte), Snappy-Daten ohne Prüfsumme; zusammen ergeben sie den Nachrichtenstrom
+function iwaStream(buf) {
+  const parts = [];
+  let p = 0, total = 0;
+  while (p + 4 <= buf.length) {
+    if (buf[p] !== 0) throw new Error('iwa');
+    const n = buf[p + 1] | (buf[p + 2] << 8) | (buf[p + 3] << 16);
+    const chunk = buf.subarray(p + 4, p + 4 + n);
+    p += 4 + n;
+    let d;
+    try { d = unsnappy(chunk); } catch { d = chunk; }   // manche Programme schreiben unkomprimiert
+    parts.push(d); total += d.length;
+  }
+  const out = new Uint8Array(total);
+  let o = 0;
+  for (const d of parts) { out.set(d, o); o += d.length; }
+  return out;
+}
+// Je Objekt: Länge + TSP.ArchiveInfo (1 = Kennung, 2 = MessageInfo mit 1 = Typ, 3 = Länge), danach die Nachrichten
+function iwaObjects(buf, objs) {
+  const data = iwaStream(buf);
+  let p = 0, hl;
+  while (p < data.length) {
+    [hl, p] = pbVarint(data, p);
+    if (p + hl > data.length) throw new Error('iwa');
+    let id = 0;
+    const msgs = [];
+    for (const x of pbFields(data.subarray(p, p + hl))) {
+      if (x.f === 1 && x.w === 0) id = x.v;
+      else if (x.f === 2 && x.w === 2) {
+        let type = 0, len = 0;
+        for (const y of pbFields(x.v)) { if (y.f === 1 && y.w === 0) type = y.v; else if (y.f === 3 && y.w === 0) len = y.v; }
+        msgs.push([type, len]);
+      }
+    }
+    p += hl;
+    msgs.forEach(([type, len], k) => {
+      if (k === 0 && !objs.has(id)) objs.set(id, { type, data: data.subarray(p, p + len) });
+      p += len;
+    });
+  }
+  return objs;
+}
+// TSWP.StorageArchive (Typ 2001/2005): 1 = Art (0 Haupttext, 1 Kopf-/Fußzeile, 2 Fußnote, 3 Textfeld …), 3 = Text, 5 = Absatzformate
+// TSWP.ParagraphStyleArchive (Typ 2022): 1 = Stil (1 = Name, 3 = Elternstil), 12 = Absatzeigenschaften (33 = im Inhaltsverzeichnis)
+const PAGES_HEAD = /^(?:title|titel|heading|überschrift|headline|chapter|kapitel)\b/i;
+function pagesBlocks(objs) {
+  const storages = [];
+  for (const [id, o] of objs) {
+    if (o.type !== 2001 && o.type !== 2005) continue;
+    const s = { id, kind: 3, text: '', para: [] };
+    for (const x of pbFields(o.data)) {
+      if (x.f === 1 && x.w === 0) s.kind = x.v;
+      else if (x.f === 3 && x.w === 2) s.text += UTF8.decode(x.v);
+      else if (x.f === 5 && x.w === 2) {
+        for (const e of pbFields(x.v)) if (e.f === 1 && e.w === 2) {
+          let i = 0, ref = 0;
+          for (const y of pbFields(e.v)) { if (y.f === 1 && y.w === 0) i = y.v; else if (y.f === 2 && y.w === 2) ref = pbRef(y.v); }
+          s.para.push({ i, ref });
+        }
+      }
+    }
+    if (s.text.trim()) storages.push(s);
+  }
+  const body = storages.filter(s => s.kind === 0).sort((a, b) => b.text.length - a.text.length)[0];
+  const use = body ? [body] : storages.filter(s => s.kind === 3).sort((a, b) => a.id - b.id);
+  const memo = new Map();
+  const style = (ref, depth = 0) => {
+    if (memo.has(ref)) return memo.get(ref);
+    const o = objs.get(ref);
+    let res = { name: '', toc: false };
+    if (o && o.type === 2022 && depth < 10) {
+      let name = '', parent = 0, toc = null;
+      for (const x of pbFields(o.data)) {
+        if (x.f === 1 && x.w === 2) for (const y of pbFields(x.v)) { if (y.f === 1 && y.w === 2) name = UTF8.decode(y.v); else if (y.f === 3 && y.w === 2) parent = pbRef(y.v); }
+        else if (x.f === 12 && x.w === 2) for (const y of pbFields(x.v)) if (y.f === 33 && y.w === 0) toc = !!y.v;
+      }
+      const up = parent && parent !== ref ? style(parent, depth + 1) : { name: '', toc: false };
+      res = { name: name || up.name, toc: toc ?? up.toc };
+    }
+    memo.set(ref, res);
+    return res;
+  };
+  const blocks = [];
+  for (const s of use) {
+    const tx = s.text, entries = s.para.slice().sort((a, b) => a.i - b.i);
+    let start = 0, ei = 0, ref = 0;
+    for (let i = 0; i <= tx.length; i++) {
+      if (i < tx.length && !/[\n\r\f\v\u2029\u0004\u000e]/.test(tx[i])) continue;
+      while (ei < entries.length && entries[ei].i <= start) ref = entries[ei++].ref;
+      const text = tx.slice(start, i).replace(/\u2028|\t/g, ' ').replace(/[\u0000-\u001f\u200b\ufff9-\ufffc]/g, '').replace(/\s+/g, ' ').trim();
+      if (/[\p{L}\p{N}]/u.test(text)) {
+        const st = style(ref);
+        blocks.push({ h: (st.toc || PAGES_HEAD.test(st.name)) && text.length <= 160, text });
+      }
+      start = i + 1;
+    }
+  }
+  return blocks;
+}
+async function pagesRead(buf) {
+  let files = zipIndex(buf);
+  let key = [...files.keys()].find(k => /(^|\/)Index\/Document\.iwa$/.test(k));
+  if (!key) {   // Paket-Format: der Index steckt in einer weiteren ZIP-Datei
+    const inner = [...files.keys()].find(k => /(^|\/)Index\.zip$/.test(k));
+    if (!inner) throw new Error('pages');
+    buf = await zipFile(buf, files, inner);
+    files = zipIndex(buf);
+    key = [...files.keys()].find(k => /(^|\/)Index\/Document\.iwa$/.test(k));
+    if (!key) throw new Error('pages');
+  }
+  const dir = key.slice(0, key.length - 'Document.iwa'.length);
+  const objs = new Map();
+  for (const name of files.keys()) {
+    if (!name.startsWith(dir) || !name.endsWith('.iwa')) continue;
+    try { iwaObjects(await zipFile(buf, files, name), objs); }
+    catch (e) { if (name === key) throw e; }   // andere Teile (etwa Tabellen) dürfen fehlen
+  }
+  const blocks = pagesBlocks(objs);
+  if (!blocks.length) throw new Error('pages');
+  return { kind: 'blocks', blocks, metaTitle: '' };
+}
+
+// Absätze aus Word und Pages wie bei PDFs bereinigen: Quellenverweise, Literaturverzeichnis, Überschriften
+function cleanBlocks(raw, o) {
+  const pre = t('marker.page'), out = [];
+  for (const b of raw.blocks) {
+    let text = b.text.replace(PAGE_ANY, (m, p) => `⟦${pre}${p}⟧`);
+    const plain = stripNum(text.replace(PAGE_ANY, ' ').replace(/\s+/g, ' ').trim());
+    if (o.dropRefs && plain.split(' ').length <= 4 && REF_HEADS.test(plain)) break;
+    if (b.h && o.headings) { out.push('# ' + text); continue; }
+    if (o.dropCites) text = stripCitations(text);
+    if (text.replace(PAGE_ANY, '').trim()) out.push(text);
+  }
+  let title = (raw.metaTitle || '').replace(/\s+/g, ' ').trim();
+  if (title.length < 3 || title.length > 220 || /^(untitled|unbenannt|ohne titel|microsoft word.*|dokument\s*\d*|document\s*\d*)$/i.test(title)) title = '';
+  if (!title) { const h = raw.blocks.slice(0, 3).find(b => b.h); if (h) title = h.text.replace(PAGE_ANY, ' ').replace(/\s+/g, ' ').trim(); }
+  if (!title) title = raw.fileTitle || t('doc.untitled');
+  return { text: out.join('\n\n'), title: title.length > 160 ? title.slice(0, 158) + ' …' : title };
+}
+async function importZipDoc(file, kind, base, name, gen = importGen) {
+  busy(t('t.docReading'));
+  let raw;
+  try {
+    const buf = new Uint8Array(await file.arrayBuffer());
+    raw = kind === 'docx' ? await docxRead(buf) : await pagesRead(buf);
+  } catch (err) {
+    const m = String(err && err.message);
+    if (!stale(gen)) toast(t(m === 'no-inflate' ? 't.zipBrowser' : kind === 'docx' ? 't.docxFail' : 't.pagesFail'), 'error', 9000);
+    return;
+  }
+  if (stale(gen)) return;
+  raw.fileTitle = base;
+  const res = cleanBlocks(raw, S);
+  if (!res.text.replace(PAGE_ANY, '').trim()) { toast(t('t.docNoText'), 'error', 7000); return; }
+  openDoc({ id: newId(), title: res.title, source: kind, text: res.text, original: res.text, raw, pos: 0 });
+  track(kind === 'docx' ? 'word-geladen' : 'pages-geladen');
+  toast(t('t.fileLoaded', { words: unit('word', M.words), name }));
 }
 // ================= state =================
 let D = null;                     // aktuelles Dokument
@@ -1564,6 +2389,8 @@ let cum = new Float64Array(1);    // aufsummierte Anzeigedauern
 let pos = 0;
 let playing = false, timer = 0, nextAt = 0, rampLeft = 0, playT0 = 0;
 let session = { ms: 0, words: 0 };
+let importGen = 0;                // jede neue Aktion (Datei, Einfügen, Test, Einführung …) macht laufende Importe ungültig
+const stale = g => { if (g === importGen) return false; if (el.toast.dataset.kind === 'busy') el.toast.hidden = true; return true; };
 // Anonyme Zählung (nur auf goatreader.app, siehe Datenschutzerklärung): ausschließlich feste Ereignisnamen, nie Texte, Titel oder Dateinamen
 const track = name => { try { if (typeof window.goatreaderCount === 'function') window.goatreaderCount(name); } catch {} };
 const startedDocs = new Set();
@@ -1598,7 +2425,7 @@ const el = {
   play: $('#btn-play'), playLabel: $('#play-label'), icPlay: $('#ic-play'), icPause: $('#ic-pause'), prev: $('#btn-prev'), next: $('#btn-next'),
   wpmOut: $('#wpm-out'), effOut: $('#eff-out'), wpmUp: $('#wpm-up'), wpmDown: $('#wpm-down'),
   ctxSection: $('#context-section'), ctxText: $('#context-text'),
-  toast: $('#toast'), scrim: $('#scrim'), drop: $('#drop-overlay')
+  toast: $('#toast'), scrim: $('#scrim'), drop: $('#drop-overlay'), tip: $('#tip'), tipText: $('#tip-text')
 };
 
 // ================= messages =================
@@ -1630,33 +2457,43 @@ function rememberDoc(d) {
 const docFromRec = r => ({ id: r.id, title: r.title, source: r.source, text: r.text, original: r.original || r.text, pos: POS[r.id] || 0, lib: true });
 const sampleDoc = () => ({ id: 'sample', title: t('sample.title'), source: 'sample', text: SAMPLE[LANG], original: SAMPLE[LANG], pos: POS['sample.' + LANG] || 0 });
 function savePos() {
-  if (!D || !M || !M.tokens.length) return;
+  if (!D || D.test || !M || !M.tokens.length) return;
   POS[posKey(D)] = clamp(pos, 0, M.tokens.length - 1);
   if (canStore) savePosMap();
 }
+function syncChip() {
+  el.docChip.hidden = !D || D.id !== 'sample';
+  el.docChip.textContent = t('doc.sampleChip');
+}
 
-function openDoc(doc) {
+// quiet: im Hintergrund öffnen (Startseite bleibt sichtbar)
+function openDoc(doc, quiet = false) {
   if (playing) pause();
+  if (!quiet) importGen++;
   D = doc; stopNote = null; session = { ms: 0, words: 0 }; curHead = -2;
   M = parseText(D.text);
   pos = clamp(doc.pos || 0, 0, Math.max(0, M.tokens.length - 1));
   computeTimes();
   el.docTitle.textContent = D.title; el.docTitle.title = D.title;
-  el.docChip.hidden = D.id !== 'sample';
+  syncChip();
   buildRuler(); buildOutline();
   render(pos); renderContext(); syncPlay();
-  rememberDoc(D);
+  if (!D.test) rememberDoc(D);   // Testtexte landen nicht in „Zuletzt gelesen“
+  if (!quiet) setView(D.test ? 'test' : 'reader');
 }
 
 // ================= timing =================
 const autoTempo = () => !!(D && D.id === 'sample' && sampleAuto);
 const wpmOfHead = h => SAMPLE_STEPS[clamp(h, 0, SAMPLE_STEPS.length - 1)];
 function wpmAt(i) {
+  if (D && D.test) return D.wpm;
   if (!autoTempo() || !M || !M.tokens.length) return S.wpm;
   return wpmOfHead(M.tokens[clamp(i, 0, M.tokens.length - 1)].head);
 }
-// Anzeigedauer im laufenden Dokument; im Beispieltext je Abschnitt eigenes Tempo, Abschnittskarten mit Tempo-Hinweis etwas länger
+// Anzeigedauer im laufenden Dokument; im Beispieltext je Abschnitt eigenes Tempo, Abschnittskarten mit Tempo-Hinweis etwas länger.
+// Im GOAT-Test: festes Tempo der Stufe mit Standardpausen.
 function tokenDelay(tk) {
+  if (D && D.test) return delayOf(tk, D.wpm, DEFAULTS);
   if (!autoTempo()) return delayOf(tk);
   return tk.kind === 'h' ? 1700 : delayOf(tk, wpmOfHead(tk.head));
 }
@@ -1692,6 +2529,7 @@ function updateTempo() {
   updateMeta();
 }
 function setWpm(v) {
+  if (D && D.test) return;   // im Test gilt das Tempo der Stufe
   const wasAuto = autoTempo();
   sampleAuto = false;   // wer selbst am Tempo dreht, bestimmt es ab jetzt auch im Beispieltext
   S.wpm = clamp(Math.round(v / 10) * 10, 100, 1000);
@@ -1720,7 +2558,10 @@ function render(i) {
   const n = M.tokens.length;
   if (!n) { showCard(t('card.empty'), t('card.empty.sub')); updateMeta(); return; }
   const tk = M.tokens[clamp(i, 0, n - 1)];
-  if (tk.kind === 'h') {
+  if (D.test && i === 0 && !playing && !stopNote) {   // GOAT-Test: Stufe ansagen, bevor es losgeht
+    showCard(t('test.card.title', { wpm: D.wpm }), t('test.card.sub'), t('test.card.kicker', { k: D.level + 1, n: TEST_LEVELS.length }));
+  }
+  else if (tk.kind === 'h') {
     const sub = autoTempo() ? t(tk.head > 0 ? 'card.speed.next' : 'card.speed.first', { wpm: wpmOfHead(tk.head) }) : '';
     showCard(tk.w, sub, t('card.section'));
   }
@@ -1757,8 +2598,9 @@ function updateMeta() {
   if (pg) el.pageLabel.textContent = t('page.short', { p: fmtN(pg), n: fmtN(M.pageCount) });
   if (tk.head !== curHead) {
     curHead = tk.head;
-    el.sectionLabel.textContent = t(M.heads.length ? 'eyebrow.section' : 'eyebrow.text');
-    el.sectionName.textContent = M.heads.length ? (tk.head >= 0 ? M.heads[tk.head].text : t('eyebrow.start')) : D.title;
+    el.sectionLabel.textContent = D.test ? t('test.title') : t(M.heads.length ? 'eyebrow.section' : 'eyebrow.text');
+    el.sectionName.textContent = D.test ? t('test.eyebrow', { k: D.level + 1, n: TEST_LEVELS.length })
+      : M.heads.length ? (tk.head >= 0 ? M.heads[tk.head].text : t('eyebrow.start')) : D.title;
     el.outline.querySelectorAll('button').forEach((b, k) => b.classList.toggle('active', k === tk.head));
     if (autoTempo()) showTempo();
   }
@@ -1853,8 +2695,12 @@ function play() {
   if (playing || !M.tokens.length) return;
   if (pos >= M.tokens.length) { pos = 0; session = { ms: 0, words: 0 }; }
   stopNote = null; playing = true;
-  if (D && !startedDocs.has(D.id)) { startedDocs.add(D.id); track(D.id === 'sample' ? 'beispiel-gestartet' : D.lib ? 'weitergelesen' : 'lesen-gestartet'); }
-  rampLeft = S.ramp && !autoTempo() ? 10 : 0;
+  if (D && !D.test && !startedDocs.has(D.id)) { startedDocs.add(D.id); track(D.id === 'sample' ? 'beispiel-gestartet' : D.lib ? 'weitergelesen' : 'lesen-gestartet'); }
+  rampLeft = S.ramp && !autoTempo() && !D.test ? 10 : 0;
+  if (!D.test) {   // wer liest, braucht den Hinweis nicht mehr (der Test zählt nicht: dort gibt es kein Springen)
+    if (!el.tip.hidden) doneTip(el.tip.dataset.id);
+    doneTip('start');
+  }
   nextAt = performance.now(); playT0 = nextAt;
   toggleOutline(false);
   syncPlay(); wake(true); step();
@@ -1868,6 +2714,7 @@ function pause() {
   if (stopNote === 'para') showParaCard();
   else if (stopNote !== 'end') render(pos);
   renderContext(); savePos();
+  if (stopNote !== 'end' && session.ms > 1500) showTip('ctx');
 }
 const toggle = () => (playing ? pause() : play());
 function step() {
@@ -1886,11 +2733,12 @@ function advance() {
   if (tk.kind === 'w') session.words++;
   if (pos >= n - 1) { pos = n; stopNote = 'end'; pause(); showEnd(); return; }
   pos++;
-  if (S.paraStop && tk.endPara) { stopNote = 'para'; pause(); return; }
+  if (S.paraStop && tk.endPara && !D.test) { stopNote = 'para'; pause(); return; }
   if (pos % 40 === 0) savePos();
   step();
 }
 function showEnd() {
+  if (D && D.test) { testLevelDone(); return; }
   const { words, ms } = session;
   const sub = words >= 20 && ms > 3000
     ? t('card.end.stats', { words: unit('word', words), t: fmtDur(ms), x: fmtN(Math.round(words / (ms / 60000))) })
@@ -1902,7 +2750,7 @@ function goTo(i) {
   const n = M.tokens.length;
   if (!n) return;
   pos = clamp(i, 0, n - 1); stopNote = null;
-  if (playing) { clearTimeout(timer); rampLeft = S.ramp && !autoTempo() ? 6 : 0; nextAt = performance.now(); step(); }
+  if (playing) { clearTimeout(timer); rampLeft = S.ramp && !autoTempo() && !D.test ? 6 : 0; nextAt = performance.now(); step(); }
   else { render(pos); renderContext(); savePos(); syncPlay(); }
 }
 function prevSentence() {
@@ -1953,16 +2801,25 @@ function setLang(l) {
     const doc = sampleDoc(), m2 = parseText(doc.text);
     const i = Math.round(frac * Math.max(0, m2.tokens.length - 1));
     doc.pos = m2.tokens.length ? m2.sents[m2.tokens[i].sent] : 0;
-    openDoc(doc);
+    openDoc(doc, true);
+  } else if (D && D.test) {
+    // GOAT-Test: laufende Stufe in der neuen Sprache von vorn; Frage und Ergebnis werden unten neu beschriftet
+    if (VIEW === 'test') openDoc(testDoc(D.level), true);
+    else { D.title = t('test.title'); el.docTitle.textContent = D.title; el.docTitle.title = D.title; }
   } else {
     curHead = -2;
     updateTempo(); buildRuler(); buildOutline();
-    if (stopNote === 'end') showEnd(); else if (stopNote === 'para') showParaCard(); else render(pos);
+    redraw();
     renderContext(); syncPlay();
   }
+  syncChip();
   updateSettingOutputs();
   if (openName === 'load') renderLibrary();
   if (openName === 'edit') updateEditStats();
+  if (VIEW === 'home') renderHome();
+  if (VIEW === 'quiz') renderQuiz();
+  if (VIEW === 'result') renderResult();
+  refreshTip();
 }
 document.querySelectorAll('.lang button').forEach(b => b.addEventListener('click', e => {
   setLang(b.dataset.lang);
@@ -1976,14 +2833,14 @@ el.reader.addEventListener('pointercancel', () => { swipe = null; });
 el.reader.addEventListener('pointerup', e => {
   if (!swipe) return;
   const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y; swipe = null;
-  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) { if (dx > 0) prevSentence(); else nextSentence(); return; }
+  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) { if (D.test) return; if (dx > 0) prevSentence(); else nextSentence(); return; }
   if (Math.abs(dx) < 12 && Math.abs(dy) < 12) toggle();
 });
 
 let drag = null;
 const fracAt = e => { const r = el.ruler.getBoundingClientRect(); return clamp((e.clientX - r.left) / r.width, 0, 1); };
 el.ruler.addEventListener('pointerdown', e => {
-  if (!M.tokens.length || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  if (D.test || !M.tokens.length || (e.pointerType === 'mouse' && e.button !== 0)) return;
   e.preventDefault();
   try { el.ruler.setPointerCapture(e.pointerId); } catch {}
   drag = { wasPlaying: playing };
@@ -2012,7 +2869,7 @@ document.addEventListener('pointerdown', e => {
 });
 el.ctxText.addEventListener('click', e => {
   const s = e.target.closest('span[data-i]');
-  if (s) goTo(+s.dataset.i);
+  if (s) { goTo(+s.dataset.i); doneTip('ctx'); }
 });
 
 // ================= keyboard =================
@@ -2023,10 +2880,14 @@ document.addEventListener('keydown', e => {
     return;
   }
   if (openName) { trapTab(e); return; }
+  pasteKeydown(e);
   if (e.altKey || e.ctrlKey || e.metaKey) return;
   const tgt = e.target instanceof Element ? e.target : document.body;
   if (tgt.closest('textarea, select, [contenteditable="true"], input:not([type=checkbox]):not([type=radio])')) return;
+  if (VIEW === 'quiz') { quizKey(e, tgt); return; }
+  if (VIEW !== 'reader' && VIEW !== 'test') return;   // Startseite und Ergebnis: keine Lese-Tasten
   if ((e.key === ' ' || e.key === 'Enter') && tgt.closest('button, a, input, label, summary')) return;
+  if (VIEW === 'test' && /^(ArrowLeft|ArrowRight|ArrowUp|ArrowDown|Home|End|j|J|l|L)$/.test(e.key)) { e.preventDefault(); return; }   // im Test kein Springen
   if (!el.outline.hidden && tgt.closest('#outline') && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
     e.preventDefault();
     const bs = [...el.outline.querySelectorAll('button')], k = bs.indexOf(tgt);
@@ -2094,13 +2955,25 @@ function stripMarkdown(s) {
     .replace(/^\s*[-*+]\s+/gm, '\n')
     .replace(/^(\s*\d+[.)]\s+)/gm, '\n$1');
 }
+// Endungen, die GOATreader sicher nicht lesen kann: gleich die passende Meldung, ohne in die Datei zu schauen
+const OTHER_EXT = new Set('xlsx xls xlsm csv tsv pptx ppt key numbers odt ods odp rtf epub mobi jpg jpeg png gif heic webp svg mp3 mp4 mov mkv iso dmg exe'.split(' '));
+const DOC_FILE = /\.(pdf|docx|docm|dotx|dotm|doc|pages|txt|md|markdown)(\.zip)?$/i;
 async function importFile(file) {
-  const name = file.name || t('doc.file'), ext = (name.split('.').pop() || '').toLowerCase();
-  const base = name.replace(/\.[^.]+$/, '') || t('doc.file');
-  if (ext === 'pdf' || file.type === 'application/pdf') return importPdf(file, base);
-  if (['txt', 'md', 'markdown', 'text'].includes(ext) || (file.type || '').startsWith('text/')) {
+  const gen = ++importGen;
+  const name = file.name || t('doc.file');
+  const zipped = /\.zip$/i.test(name);   // Paket-Dokumente (etwa Pages) laden manche Browser als „Name.pages.zip“ hoch
+  const core = zipped ? name.slice(0, -4) : name;
+  const ext = core.includes('.') ? core.split('.').pop().toLowerCase() : '';
+  const base = core.replace(/\.[^.]+$/, '') || t('doc.file'), type = file.type || '';
+  if (ext === 'pdf' || type === 'application/pdf') return importPdf(file, base, gen);
+  if (['docx', 'docm', 'dotx', 'dotm'].includes(ext) || /wordprocessingml/.test(type)) return importZipDoc(file, 'docx', base, name, gen);
+  if (ext === 'pages' || /apple\.pages|iwork-pages/.test(type)) return importZipDoc(file, 'pages', base, name, gen);
+  if (ext === 'doc' || type === 'application/msword') { toast(t('t.docOld'), 'error', 9000); return; }
+  if (OTHER_EXT.has(ext) && !zipped) { toast(t('t.fileUnsupported'), 'error', 7000); return; }
+  if (!zipped && (['txt', 'md', 'markdown', 'text'].includes(ext) || type.startsWith('text/'))) {
     let text = '';
     try { text = await file.text(); } catch { toast(t('t.fileReadFail'), 'error'); return; }
+    if (stale(gen)) return;
     if (ext === 'md' || ext === 'markdown') text = stripMarkdown(text);
     if (!text.trim()) { toast(t('t.fileEmpty'), 'error'); return; }
     openDoc({ id: newId(), title: /^\s*#{1,6}\s/m.test(text) ? titleFromText(text) : base, source: 'text', text, original: text, pos: 0 });
@@ -2108,7 +2981,30 @@ async function importFile(file) {
     toast(t('t.fileLoaded', { words: unit('word', M.words), name }));
     return;
   }
+  // Endung fehlt, ist unbekannt oder .zip: am Inhalt erkennen. Gelesen werden nur die ersten Bytes, ganz nur ZIP-Dateien bis 300 MB.
+  try {
+    const head = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+    if (stale(gen)) return;
+    if (head[0] === 0x25 && head[1] === 0x50 && head[2] === 0x44 && head[3] === 0x46) return importPdf(file, base, gen);
+    if (head[0] === 0x50 && head[1] === 0x4b && file.size < 300e6) {
+      const keys = [...zipIndex(new Uint8Array(await file.arrayBuffer())).keys()];
+      if (stale(gen)) return;
+      if (keys.includes('word/document.xml')) return importZipDoc(file, 'docx', base, name, gen);
+      if (keys.some(k => /(^|\/)Index\/Document\.iwa$|(^|\/)Index\.zip$/.test(k))) return importZipDoc(file, 'pages', base, name, gen);
+    }
+  } catch { /* unbekannt */ }
   toast(t('t.fileUnsupported'), 'error', 7000);
+}
+// Eingefügten Text lesen (Startseite, „Laden“, Strg+V auf der Seite)
+const isUrlOnly = tx => /^\s*(?:https?:\/\/|www\.)\S+\s*$/i.test(tx);
+function readPasted(text) {
+  const tx = String(text || '');
+  if (!tx.trim()) { toast(t('t.pasteEmpty'), 'error'); return false; }
+  if (isUrlOnly(tx)) { toast(t('t.pasteUrl'), 'error', 7000); return false; }
+  openDoc({ id: newId(), title: titleFromText(tx), source: 'text', text: tx, original: tx, pos: 0 });
+  track('text-geladen');
+  toast(t('t.pasteReady', { words: unit('word', M.words) }));
+  return true;
 }
 const fileInput = $('#file-input');
 fileInput.addEventListener('change', () => {
@@ -2119,10 +3015,9 @@ fileInput.addEventListener('change', () => {
 $('#paste-go').addEventListener('click', () => {
   const ta = $('#paste-text'), text = ta.value;
   if (!text.trim()) { toast(t('t.pasteEmpty'), 'error'); ta.focus(); return; }
-  closePanel(false); ta.value = '';
-  openDoc({ id: newId(), title: titleFromText(text), source: 'text', text, original: text, pos: 0 });
-  track('text-geladen');
-  toast(t('t.pasteReady', { words: unit('word', M.words) }));
+  if (isUrlOnly(text)) { toast(t('t.pasteUrl'), 'error', 7000); ta.focus(); return; }
+  closePanel(false);
+  if (readPasted(text)) ta.value = '';
 });
 $('#open-sample').addEventListener('click', () => { closePanel(false); sampleAuto = true; openDoc(sampleDoc()); });
 function renderLibrary() {
@@ -2208,7 +3103,7 @@ $('#edit-restore').addEventListener('click', () => { editText.value = localMarke
 for (const k of CLEAN_KEYS) $('#opt-' + k).addEventListener('change', e => { S[k] = e.target.checked; saveSettings(); });
 $('#reclean').addEventListener('click', () => {
   if (!D.raw) return;
-  editText.value = cleanPdf(D.raw, S).text;
+  editText.value = (D.raw.kind === 'blocks' ? cleanBlocks : cleanPdf)(D.raw, S).text;
   updateEditStats();
   toast(t('t.recleaned'));
 });
@@ -2270,25 +3165,328 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) { pau
 window.addEventListener('pagehide', () => { savePos(); if (canStore) store.set(K.pos, POS); });
 window.addEventListener('resize', debounce(() => { if (M && M.tokens.length) place(); }, 60));
 
+// ================= Ansichten: Startseite, Lesefenster, GOAT-Test =================
+let VIEW = 'home', lastView = 'reader', focusAfterHome = null;
+// Verlauf nur, wenn die Seite das ganze Fenster ist; in einem Rahmen teilt sie sich den Verlauf mit der Seite drumherum
+const HISTORY = (() => { try { return window.top === window.self && typeof history.pushState === 'function'; } catch { return false; } })();
+let onAppEntry = false;   // steht der Browser gerade auf dem eigenen Verlaufseintrag (Lesefenster, Test …)?
+if (HISTORY && history.state && history.state.goatreader) { try { history.replaceState(null, ''); } catch { /* egal */ } }   // nach Neuladen
+const V = { home: $('#home'), instrument: $('.instrument'), context: $('#context'), keys: $('.keys'), quiz: $('#quiz'), result: $('#result'),
+  doc: $('#doc'), actions: $('#bar-actions'), exit: $('#test-exit') };
+function redraw() {
+  if (stopNote === 'end' && !(D && D.test)) showEnd(); else if (stopNote === 'para') showParaCard(); else render(pos);
+}
+function setView(v) {
+  const prev = VIEW;
+  if (v !== 'reader' && v !== 'test') { if (playing) pause(); toggleOutline(false); }
+  if (v !== 'reader') closePanel(false);
+  VIEW = v;
+  if (v !== 'home') lastView = v;
+  document.body.dataset.view = v;
+  V.home.hidden = v !== 'home';
+  V.instrument.hidden = v !== 'reader' && v !== 'test';
+  V.context.hidden = v !== 'reader';
+  V.keys.hidden = v !== 'reader';
+  V.quiz.hidden = v !== 'quiz';
+  V.result.hidden = v !== 'result';
+  V.doc.hidden = v !== 'reader';
+  V.actions.hidden = v !== 'reader';
+  V.exit.hidden = v !== 'test' && v !== 'quiz';
+  el.ruler.tabIndex = v === 'test' ? -1 : 0;   // im Test kein Springen, also auch kein bedienbarer Regler
+  el.ruler.setAttribute('aria-disabled', String(v === 'test'));
+  if (v !== 'reader') el.tip.hidden = true;
+  if (v === 'reader' || v === 'test') { redraw(); syncPlay(); if (!openName) el.reader.focus({ preventScroll: true }); }
+  if (v === 'reader') { renderContext(); showTip('start'); }   // Kontext erst jetzt messbar (vorher verborgen)
+  if (v === 'home') renderHome();
+  if (v !== prev) window.scrollTo(0, 0);
+  // Die Zurück-Taste des Browsers führt zur Startseite statt von der Seite weg
+  if (v !== 'home' && HISTORY && !onAppEntry) { try { history.pushState({ goatreader: 1 }, ''); onAppEntry = true; } catch { /* ohne Verlauf */ } }
+  if (v === 'home' && prev !== 'home') {
+    const f = focusAfterHome ? $(focusAfterHome) : null;
+    focusAfterHome = null;
+    if (f) { f.closest('.choice')?.scrollIntoView({ block: 'start' }); f.focus({ preventScroll: true }); }
+    else { const a = document.activeElement; if (!a || a === document.body || a.closest('[hidden]')) $('#home-title').focus({ preventScroll: true }); }
+  }
+}
+function goHome(focus) {
+  focusAfterHome = focus || null;
+  setView('home');
+  if (onAppEntry) { onAppEntry = false; try { history.back(); } catch { /* ohne Verlauf */ } }   // eigenen Eintrag zurücknehmen
+}
+window.addEventListener('popstate', e => {
+  onAppEntry = !!(e.state && e.state.goatreader);
+  if (!onAppEntry) { if (VIEW !== 'home') setView('home'); }
+  else if (VIEW === 'home') setView(lastView);   // Vorwärts-Taste: zurück zur letzten Ansicht
+});
+
+// --- Startseite ---
+const H = { resume: $('#resume'), resumeTitle: $('#resume-title'), resumeSub: $('#resume-sub'), best: $('#test-best'), introTime: $('#intro-time'),
+  key: $('#home-key'), paste: $('#home-paste'), go: $('#home-go'), count: $('#home-count'), clip: $('#home-clip'), file: $('#home-file') };
+const IS_MAC = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent || '');
+const pasteKey = () => (IS_MAC ? '⌘+V' : t('key.paste'));
+const touchUI = () => typeof matchMedia === 'function' && matchMedia('(hover: none), (pointer: coarse)').matches;
+const resumeRec = () => LIB.find(x => x.id === store.get(K.cur, null)) || LIB[0] || null;
+function sampleDuration() {
+  const m = parseText(SAMPLE[LANG]);
+  return m.tokens.reduce((s, tk) => s + (tk.kind === 'h' ? 1700 : delayOf(tk, wpmOfHead(tk.head))), 0);
+}
+function renderHome() {
+  const rec = resumeRec();
+  H.resume.hidden = !rec;
+  if (rec) {
+    H.resumeTitle.textContent = rec.title; H.resumeTitle.title = rec.title;
+    const p = rec.tokens > 1 ? Math.min(100, Math.round((POS[rec.id] || 0) / (rec.tokens - 1) * 100)) : 0;
+    H.resumeSub.textContent = t('lib.sub', { words: unit('word', rec.words || 0), p });
+  }
+  const best = testBest();
+  H.best.hidden = !best;
+  if (best) H.best.textContent = t('home.train.best', { wpm: TEST_LEVELS[best - 1] });
+  for (const sel of ['#levels span', '#ranks span']) document.querySelectorAll(sel).forEach((x, k) => x.classList.toggle('done', k < best));
+  H.introTime.textContent = t('home.intro.time', { t: fmtDur(sampleDuration()) });
+  H.key.textContent = t('home.paste.key', { key: pasteKey() });
+  updateCount();
+}
+const updateCount = debounce(() => {
+  const tx = H.paste.value;
+  if (!tx.trim()) { H.count.textContent = ''; return; }
+  const m = parseText(tx);
+  H.count.textContent = t('home.paste.count', { words: unit('word', m.words), t: fmtDur(totalTime(m)), wpm: S.wpm });
+}, 150);
+H.paste.addEventListener('input', () => { H.go.disabled = !H.paste.value.trim(); updateCount(); });
+H.paste.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); H.go.click(); } });
+H.go.addEventListener('click', () => { if (readPasted(H.paste.value)) { H.paste.value = ''; H.go.disabled = true; updateCount(); } });
+if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') H.clip.hidden = false;
+H.clip.addEventListener('click', async () => {
+  track('start-einfuegen');
+  try {
+    const tx = await navigator.clipboard.readText();
+    if (!tx || !tx.trim()) { toast(t('t.clipEmpty'), 'error'); return; }
+    H.paste.value = tx; H.go.disabled = false; updateCount(); H.go.focus();
+  } catch {
+    H.paste.focus();
+    toast(touchUI() ? t('t.clipManualTouch') : t('t.clipManual', { key: pasteKey() }), 'info', 6000);
+  }
+});
+H.file.addEventListener('click', () => track('start-datei'));
+// Handy: „Text einfügen“ holt den Text direkt aus der Zwischenablage; klappt das nicht, öffnet sich das Feld
+$('#home-paste-open').addEventListener('click', async () => {
+  track('start-einfuegen');
+  let tx = '';
+  try { if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') tx = await navigator.clipboard.readText(); } catch { /* von Hand einfügen */ }
+  if (tx && tx.trim() && readPasted(tx)) return;
+  $('#choice-read').classList.add('pasting');
+  H.paste.focus();
+  if (!tx || !tx.trim()) toast(touchUI() ? t('t.clipManualTouch') : t('t.clipManual', { key: pasteKey() }), 'info', 6000);
+});
+H.file.addEventListener('change', () => { const f = H.file.files && H.file.files[0]; H.file.value = ''; if (f) importFile(f); });
+$('#intro-start').addEventListener('click', () => { track('start-einfuehrung'); sampleAuto = true; const d = sampleDoc(); d.pos = 0; openDoc(d); });
+$('#resume-go').addEventListener('click', () => {
+  const rec = resumeRec();
+  if (!rec) return;
+  track('start-weiterlesen');
+  if (D && D.id === rec.id) setView('reader'); else openDoc(docFromRec(rec));
+});
+$('#go-home').addEventListener('click', () => { if (VIEW === 'home') window.scrollTo(0, 0); else goHome(); });
+$('#test-exit').addEventListener('click', () => goHome());
+// Strg+V oder ⌘+V irgendwo auf der Seite (außerhalb von Eingabefeldern): Text oder Datei sofort lesen.
+// Safari schickt „Einfügen“ nur an ein Eingabefeld, deshalb fängt ein unsichtbares Feld den Tastendruck auf.
+const catcher = $('#paste-catcher');
+function pasteKeydown(e) {
+  if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey || (e.key !== 'v' && e.key !== 'V') || openName || (VIEW !== 'home' && VIEW !== 'reader')) return;
+  const tg = e.target instanceof Element ? e.target : document.body;
+  if (tg.closest('textarea, input, select, [contenteditable="true"]')) return;
+  const back = document.activeElement;
+  catcher.value = '';
+  catcher.focus({ preventScroll: true });
+  setTimeout(() => {   // nach dem Einfügen (oder wenn nichts kam) den Fokus zurückgeben
+    if (document.activeElement !== catcher) return;
+    catcher.blur();
+    if (back && back !== document.body && !back.closest('[hidden]')) back.focus({ preventScroll: true });
+  }, 0);
+}
+document.addEventListener('paste', e => {
+  if (openName || (VIEW !== 'home' && VIEW !== 'reader')) return;
+  const tgt = e.target instanceof Element ? e.target : null;
+  if (tgt && tgt !== catcher && tgt.closest('textarea, input, [contenteditable="true"]')) return;
+  const cd = e.clipboardData;
+  if (!cd) return;
+  e.preventDefault();
+  const f = [...(cd.files || [])].find(x => DOC_FILE.test(x.name || '') || /pdf|wordprocessingml|msword|apple\.pages/.test(x.type || ''));
+  if (f) { importFile(f); return; }   // kopierte Datei (etwa aus dem Finder)
+  const tx = cd.getData('text/plain');
+  if (tx && tx.trim()) readPasted(tx);   // Text hat Vorrang vor Bildern, die Office-Programme mitkopieren
+});
+
+// --- GOAT-Test: vier Stufen, je ein kurzer Text und eine Frage; eine falsche Antwort beendet den Test ---
+const TEST_LEVELS = [300, 400, 500, 600];
+const TEST_SETS = ['a', 'b'];
+const K_TEST = 'goatreader.test.v1';   // { best: geschaffte Stufen 0 bis 4, next: nächster Textsatz }
+const TEST = { set: 0, level: 0, order: [0, 1, 2], answered: null, answers: [], passed: 0, prevBest: 0 };
+const OPT = ['ok', 'x1', 'x2'];
+const testStore = () => { const v = store.get(K_TEST, {}); return v && typeof v === 'object' ? v : {}; };
+const testBest = () => clamp(Math.floor(+testStore().best) || 0, 0, TEST_LEVELS.length);
+const testKey = (k, f) => `test.${TEST_SETS[TEST.set]}${k + 1}.${f}`;
+const testDoc = k => ({ id: 'test', test: true, level: k, wpm: TEST_LEVELS[k], title: t('test.title'), source: 'test', text: t(testKey(k, 'text')), pos: 0 });
+function shuffled(a) {
+  a = a.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function startTest() {
+  const st = testStore();
+  TEST.set = clamp(Math.floor(+st.next) || 0, 0, TEST_SETS.length - 1);   // beim nächsten Mal der andere Textsatz
+  store.set(K_TEST, { ...st, next: (TEST.set + 1) % TEST_SETS.length });
+  TEST.answers = [];
+  track('test-gestartet');
+  openLevel(0);
+}
+function openLevel(k) {
+  TEST.level = k; TEST.answered = null; TEST.order = shuffled([0, 1, 2]);
+  openDoc(testDoc(k));
+}
+function testLevelDone() {
+  setView('quiz'); renderQuiz();
+  $('#quiz-q').focus({ preventScroll: true });
+}
+function renderQuiz() {
+  const k = TEST.level, n = TEST_LEVELS.length, done = TEST.answered != null;
+  $('#quiz-kicker').textContent = t('quiz.kicker', { k: k + 1, n, wpm: TEST_LEVELS[k] });
+  $('#quiz-q').textContent = t(testKey(k, 'q'));
+  const box = $('#quiz-opts');
+  box.replaceChildren();
+  TEST.order.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn';
+    const mine = done && i === TEST.answered, right = done && o === 0;
+    const num = document.createElement('span'); num.className = 'k'; num.setAttribute('aria-hidden', 'true');
+    num.textContent = right ? '✓' : mine ? '✗' : String(i + 1);
+    const tx = document.createElement('span'); tx.textContent = t(testKey(k, OPT[o]));
+    b.append(num, tx);
+    if (right || mine) { const sr = document.createElement('span'); sr.className = 'sr-only'; sr.textContent = t(right ? 'quiz.sr.ok' : 'quiz.sr.mine'); b.append(sr); }
+    if (done) { b.disabled = true; if (right) b.classList.add('ok'); else if (mine) b.classList.add('no'); }
+    b.addEventListener('click', () => answerQuiz(i));
+    box.append(b);
+  });
+  const fb = $('#quiz-fb'), next = $('#quiz-next');
+  if (!done) { fb.textContent = ''; fb.className = 'fb'; next.hidden = true; return; }
+  const ok = TEST.answers[k], last = k === n - 1;
+  fb.className = 'fb ' + (ok ? 'ok' : 'no');
+  fb.textContent = ok ? (last ? t('quiz.ok.last') : t('quiz.ok.next', { wpm: TEST_LEVELS[k + 1] })) : t('quiz.no', { a: t(testKey(k, 'ok')) });
+  next.textContent = ok && !last ? t('quiz.next') : t('quiz.result');
+  next.hidden = false;
+}
+function answerQuiz(i) {
+  if (TEST.answered != null || VIEW !== 'quiz') return;
+  TEST.answered = i;
+  TEST.answers[TEST.level] = TEST.order[i] === 0;
+  renderQuiz();
+  $('#quiz-next').focus({ preventScroll: true });
+}
+function nextQuiz() {
+  if (TEST.answered == null) return;
+  if (TEST.answers[TEST.level] && TEST.level < TEST_LEVELS.length - 1) openLevel(TEST.level + 1);
+  else finishTest();
+}
+function quizKey(e, tgt) {
+  if (/^[1-3]$/.test(e.key) && TEST.answered == null) { e.preventDefault(); answerQuiz(+e.key - 1); }
+  else if (e.key === 'Enter' && TEST.answered != null && !tgt.closest('button, a')) { e.preventDefault(); nextQuiz(); }
+}
+function finishTest() {
+  TEST.passed = TEST.answers.filter(Boolean).length;
+  const st = testStore();
+  TEST.prevBest = clamp(Math.floor(+st.best) || 0, 0, TEST_LEVELS.length);
+  if (TEST.passed > TEST.prevBest) store.set(K_TEST, { ...st, best: TEST.passed });
+  track('test-ergebnis-' + TEST.passed);
+  setView('result'); renderResult();
+  $('#result-rank').focus({ preventScroll: true });
+}
+// Effektives Tempo einer Stufe: Wörter geteilt durch die Gesamtdauer mit den Standardpausen
+function testEff(k) {
+  const m = parseText(t(testKey(k, 'text')));
+  const ms = m.tokens.reduce((s, tk) => s + delayOf(tk, TEST_LEVELS[k], DEFAULTS), 0);
+  return ms ? m.words / (ms / 60000) : TEST_LEVELS[k];
+}
+function renderResult() {
+  const p = TEST.passed, n = TEST_LEVELS.length;
+  $('#result-rank').textContent = t(`rank.${p}`);
+  $('#result-main').textContent = p === n ? t('res.main.all', { wpm: TEST_LEVELS[n - 1] }) : p ? t('res.main', { wpm: TEST_LEVELS[p - 1] }) : t('res.main0', { wpm: TEST_LEVELS[0] });
+  const ol = $('#result-steps');
+  ol.replaceChildren();
+  TEST_LEVELS.forEach((w, k) => {
+    const st = k < p ? 'ok' : TEST.answers[k] === false ? 'no' : 'open';
+    const li = document.createElement('li'); li.className = st;
+    const b = document.createElement('b'); b.textContent = `${w} ${t('tempo.unit')}`;
+    const s = document.createElement('span'); s.textContent = t(`res.step.${st}`);
+    li.append(b, s);
+    ol.append(li);
+  });
+  const eff = $('#result-eff');
+  eff.hidden = !p;
+  if (p) eff.textContent = t('res.eff', { e: fmtN(Math.round(testEff(p - 1) / 10) * 10) });
+  const best = $('#result-best');
+  best.hidden = !(TEST.prevBest > p || (p > TEST.prevBest && TEST.prevBest > 0));
+  best.textContent = TEST.prevBest > p ? t('res.best', { wpm: TEST_LEVELS[TEST.prevBest - 1] }) : t('res.newbest');
+}
+// Teilen: nur der Text und die Adresse goatreader.app, sonst nichts
+async function shareResult() {
+  const p = TEST.passed, url = 'https://goatreader.app';
+  const text = p ? t('res.share.text', { wpm: TEST_LEVELS[p - 1], rank: t(`rank.${p}`) }) : t('res.share.text0');
+  track('test-geteilt');
+  if (typeof navigator.share === 'function') {
+    try { await navigator.share({ title: APP, text, url }); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(text + ' ' + url); toast(t('t.shareCopied')); }
+  catch { toast(t('t.shareManual', { text: text + ' ' + url }), 'info', 10000); }
+}
+$('#test-start').addEventListener('click', startTest);
+$('#quiz-next').addEventListener('click', nextQuiz);
+$('#result-share').addEventListener('click', shareResult);
+$('#result-again').addEventListener('click', startTest);
+$('#result-read').addEventListener('click', () => goHome('#home-file'));
+$('#result-home').addEventListener('click', () => goHome());
+
+// --- Hinweise beim ersten Mal: verschwinden, sobald man es tut; ein Tipp auf „OK“ blendet alle aus ---
+const K_TIPS = 'goatreader.tips.v1';
+let TIPS = store.get(K_TIPS, {});
+if (!TIPS || typeof TIPS !== 'object') TIPS = {};
+const tipText = id => t(id === 'start' ? (touchUI() ? 'tip.start.touch' : 'tip.start.keys') : 'tip.ctx');
+function showTip(id) {
+  if (TIPS.off || TIPS[id] || VIEW !== 'reader' || playing || openName) return;
+  el.tip.dataset.id = id;
+  el.tipText.textContent = tipText(id);
+  el.tip.hidden = false;
+}
+function refreshTip() { if (!el.tip.hidden) el.tipText.textContent = tipText(el.tip.dataset.id); }
+function doneTip(id) {
+  if (!id) return;
+  if (!TIPS[id]) { TIPS[id] = 1; store.set(K_TIPS, TIPS); }
+  if (el.tip.dataset.id === id) el.tip.hidden = true;
+}
+$('#tip-ok').addEventListener('click', () => {
+  TIPS.off = 1; store.set(K_TIPS, TIPS);
+  el.tip.hidden = true;
+  el.reader.focus({ preventScroll: true });
+});
+
 // ================= start =================
 document.documentElement.lang = LANG;
 document.title = t('app.title');
 applyStatic();
 document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === LANG)));
 applyDisplay();
-{
-  const cur = store.get(K.cur, 'sample');
-  const rec = cur && cur !== 'sample' ? LIB.find(x => x.id === cur) : null;
-  openDoc(rec ? docFromRec(rec) : sampleDoc());
-}
+openDoc(sampleDoc(), true);   // Lesefenster im Hintergrund vorbereiten; sichtbar ist zuerst die Startseite
 fillSettings();
+setView('home');
 if (document.fonts) {
   document.fonts.load('480 40px Literata').then(() => place(), () => {});
   document.fonts.ready.then(() => place(), () => {});
 }
 // Für Tests und Fehlersuche
 window.__goatreader = {
-  state: () => ({ pos, playing, n: M.tokens.length, words: M.words, eff: effWpm(), effWhole: effWpm(true), wpmNow: wpmAt(pos), autoTempo: autoTempo(), doc: D && D.id, title: D && D.title, text: D && D.text, sents: M.sents, wpm: S.wpm, lang: LANG }),
+  state: () => ({ pos, playing, n: M.tokens.length, words: M.words, eff: effWpm(), effWhole: effWpm(true), wpmNow: wpmAt(pos), autoTempo: autoTempo(), doc: D && D.id, title: D && D.title, text: D && D.text, sents: M.sents, wpm: S.wpm, lang: LANG, view: VIEW }),
+  test: () => ({ set: TEST.set, level: TEST.level, answer: TEST.order.indexOf(0), answered: TEST.answered, answers: TEST.answers.slice(), passed: TEST.passed, levels: TEST_LEVELS.slice() }),
+  tips: () => ({ ...TIPS }),
   t, unit, dict: I18N
 };
 })();
