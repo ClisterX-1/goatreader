@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>GOATreader: PDFs und Texte schneller lesen</title>
-<meta name="description" content="GOATreader lässt dich PDFs und Texte schneller lesen: Wort für Wort, mit Fokusbuchstabe, Satz zurück, Kontextansicht und ehrlichen Tempowerten. Kostenlos, ohne Anmeldung, deine Texte bleiben in deinem Browser.">
+<title>GOATreader: Speedreading für alle</title>
+<meta name="description" content="Lies PDFs, Word- und Pages-Dateien schneller oder mach den GOAT-Test: Wie schnell liest du wirklich? Kostenlos, ohne Anmeldung, deine Texte bleiben in deinem Browser.">
 <link rel="canonical" href="https://goatreader.app/">
 <meta name="theme-color" content="#ECEEF1" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0E141A" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="GOATreader">
-<meta property="og:title" content="GOATreader">
-<meta property="og:description" content="Lies PDFs und Texte schneller. Kostenlos, ohne Anmeldung, deine Texte bleiben in deinem Browser.">
+<meta property="og:title" content="GOATreader: Speedreading für alle">
+<meta property="og:description" content="Lies PDFs, Word- und Pages-Dateien schneller oder mach den GOAT-Test. Kostenlos, ohne Anmeldung, deine Texte bleiben in deinem Browser.">
 <meta property="og:url" content="https://goatreader.app/">
 <meta property="og:locale" content="de_DE">
 <meta property="og:locale:alternate" content="en_US">
 <meta property="og:image" content="https://goatreader.app/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="GOATreader: das Wort GOAT in einem Lesefenster, mit dem Fokusbuchstaben O in Rot">
+<meta property="og:image:alt" content="GOATreader: das Wort GOAT in einem Lesefenster, Fokusbuchstabe O in Rot. Darunter: Wie schnell liest du wirklich? Mach den GOAT-Test.">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
@@ -282,12 +282,12 @@ textarea{width:100%;border:1px solid var(--rule);border-radius:8px;background:va
 .or{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3)}
 .or::before,.or::after{content:"";flex:1;height:1px;background:var(--rule)}
 #home-paste{min-height:104px}
-.levels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:end;gap:8px;height:86px}
+.levels{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));align-items:end;gap:6px;height:86px}
 .levels span{display:flex;align-items:flex-end;justify-content:center;padding-bottom:7px;border-radius:8px 8px 4px 4px;background:var(--pencil-soft);
   color:var(--pencil);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
-.levels span:nth-child(1){height:42%}.levels span:nth-child(2){height:60%}.levels span:nth-child(3){height:80%}.levels span:nth-child(4){height:100%}
+.levels span:nth-child(1){height:34%}.levels span:nth-child(2){height:45%}.levels span:nth-child(3){height:56%}.levels span:nth-child(4){height:67%}.levels span:nth-child(5){height:78%}.levels span:nth-child(6){height:89%}.levels span:nth-child(7){height:100%}
 .levels span.done{background:var(--pencil);color:var(--pencil-ink)}
-.ranks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:-6px;font-size:12px;line-height:1.25;color:var(--ink-3);text-align:center}
+.ranks{display:flex;justify-content:space-between;gap:8px;margin-top:-6px;font-size:12px;line-height:1.25;color:var(--ink-3)}
 .ranks span.done{color:var(--pencil);font-weight:600}
 .paste-box{display:flex;flex-direction:column;gap:12px}
 .paste-open{display:none}
@@ -311,13 +311,20 @@ textarea{width:100%;border:1px solid var(--rule);border-radius:8px;background:va
 .fb.ok{color:var(--ok)}
 .fb.no{color:var(--danger)}
 .res-main{margin:0;font-size:16.5px}
-.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px}
 .steps li{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px;border:1px solid var(--rule);border-radius:10px;background:var(--paper);
   font-size:12.5px;color:var(--ink-2);text-align:center}
-.steps b{font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums}
+.steps b{font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
 .steps li.ok{border-color:var(--ok);background:var(--ok-soft)}
 .steps li.no{border-color:var(--danger)}
 .steps li.open{opacity:.6}
+.cmp{display:flex;flex-direction:column;gap:8px}
+.cmp-row{display:grid;grid-template-columns:minmax(0,15em) minmax(0,1fr) auto;align-items:center;gap:6px 12px;font-size:13.5px;color:var(--ink-2)}
+.cmp-t{height:12px;border-radius:6px;background:var(--paper);border:1px solid var(--rule);overflow:hidden}
+.cmp-t i{display:block;height:100%;width:0;border-radius:6px;background:var(--ink-3)}
+.cmp-row.you{color:var(--ink);font-weight:600}
+.cmp-row.you .cmp-t i{background:var(--pencil)}
+.cmp-n{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
 
 /* ---------- reading window during the test: fixed speed, no jumping ---------- */
 body[data-view="test"] #btn-prev,body[data-view="test"] #btn-next,body[data-view="test"] #wpm-up,body[data-view="test"] #wpm-down{display:none}
@@ -343,6 +350,9 @@ body.is-playing .tip{display:none}
 }
 @media (max-width:640px){
   .choice,.stage{padding:16px}
+  .cmp-row{grid-template-columns:minmax(0,1fr) auto;gap:4px 10px}
+  .steps{grid-template-columns:repeat(auto-fill,minmax(68px,1fr))}.steps li{font-size:12px;padding:8px 2px}.steps b{font-size:14px}
+  .cmp-l{grid-column:1;grid-row:1}.cmp-n{grid-column:2;grid-row:1}.cmp-t{grid-column:1 / -1;grid-row:2}
   .hero p{font-size:15.5px}
   .resume{flex-wrap:wrap;padding:12px 14px}
   .resume .btn{flex:1}
@@ -362,7 +372,6 @@ body.is-playing .tip{display:none}
   /* schmale Handys: Satz-Knöpfe nur mit Symbol (Beschriftung bleibt als aria-label und title) */
   .tgroup .btn:not(.play){width:46px;height:46px;padding:0}
   .tgroup .btn:not(.play) span{display:none}
-  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
   #test-exit span{display:none}
   #test-exit{width:40px;padding:0}
 }
@@ -504,8 +513,8 @@ body.is-playing .tip{display:none}
         <section class="choice" id="choice-train" aria-labelledby="choice-train-h">
           <div class="choice-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5l3.5-3.5M10 2.5h4M12 2.5V6"/></svg><h2 id="choice-train-h" data-i18n="home.train.title">Train and test</h2></div>
           <p class="choice-desc" data-i18n="home.train.desc">How fast do you really read? Four short texts, each one faster than the last, with a question after each.</p>
-          <div class="levels" id="levels" role="img" aria-label="Four levels: 300, 400, 500 and 600 words per minute" data-i18n-attr="aria-label:home.train.levels"><span>300</span><span>400</span><span>500</span><span>600</span></div>
-          <div class="ranks" id="ranks" aria-hidden="true"><span data-i18n="rank.1">Little goat</span><span data-i18n="rank.2">Mountain goat</span><span data-i18n="rank.3">Summit goat</span><span data-i18n="rank.4">GOAT</span></div>
+          <div class="levels" id="levels" role="img" aria-label="Seven levels from 300 to 900 words per minute, in steps of 100" data-i18n-attr="aria-label:home.train.levels"><span>300</span><span>400</span><span>500</span><span>600</span><span>700</span><span>800</span><span>900</span></div>
+          <div class="ranks" id="ranks" aria-hidden="true"><span data-i18n="rank.1">Little goat</span><span data-i18n="rank.7">GOAT</span></div>
           <div class="row">
             <button class="btn primary" id="test-start" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4h11l-2 4 2 4H5"/></svg><span data-i18n="home.train.go">Start the GOAT test</span></button>
             <span class="note" data-i18n="home.train.time">Takes about two minutes.</span>
@@ -584,9 +593,12 @@ body.is-playing .tip{display:none}
       <h2 class="rank" id="result-rank" tabindex="-1"></h2>
       <p class="res-main" id="result-main"></p>
       <ol class="steps" id="result-steps"></ol>
-      <p class="note" id="result-eff"></p>
+      <div class="cmp" id="result-bars" hidden>
+        <div class="cmp-row you"><span class="cmp-l" data-i18n="res.bar.you">You in the test (with sentence pauses)</span><span class="cmp-t" aria-hidden="true"><i id="bar-you"></i></span><b class="cmp-n" id="bar-you-n"></b></div>
+        <div class="cmp-row"><span class="cmp-l" data-i18n="res.bar.avg">Average for silent reading</span><span class="cmp-t" aria-hidden="true"><i id="bar-avg"></i></span><b class="cmp-n" id="bar-avg-n"></b></div>
+      </div>
+      <p class="note" id="result-cmp"></p>
       <p class="note" id="result-best" hidden></p>
-      <p class="note" id="result-cmp" data-i18n="res.cmp">For comparison: adults read English texts silently at about 240 words per minute on average (Brysbaert 2019).</p>
       <p class="note" data-i18n="res.tip">Tip: for dense texts like papers, start a little slower and speed up step by step.</p>
       <div class="row">
         <button class="btn primary" id="result-share" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><span data-i18n="res.share">Share result</span></button>
@@ -725,7 +737,7 @@ body.is-playing .tip{display:none}
 const APP = 'GOATreader';
 const I18N = {
   en: {
-    'app.title': 'GOATreader: Read PDFs and texts faster',
+    'app.title': 'GOATreader: Speed reading for everyone',
     'doc.sampleChip': 'Sample',
     'doc.untitled': 'My text',
     'doc.file': 'File',
@@ -907,10 +919,10 @@ const I18N = {
     'home.paste.key': 'Tip: press {key} anywhere on this page, and the text you copied starts right away.',
     'key.paste': 'Ctrl+V',
     'home.train.title': 'Train and test',
-    'home.train.desc': 'How fast do you really read? Four short texts, each one faster than the last, with a question after each.',
-    'home.train.levels': 'Four levels: 300, 400, 500 and 600 words per minute',
+    'home.train.desc': 'How fast do you really read? Seven short texts from 300 to 900 words per minute, each one faster than the last, with a question after each.',
+    'home.train.levels': 'Seven levels from 300 to 900 words per minute, in steps of 100',
     'home.train.go': 'Start the GOAT test',
-    'home.train.time': 'Takes about two minutes.',
+    'home.train.time': 'Takes about two to three minutes.',
     'home.train.best': 'Your best so far: {wpm} words per minute',
     'test.title': 'GOAT test',
     'test.exit': 'Quit test',
@@ -929,18 +941,22 @@ const I18N = {
     'quiz.sr.mine': 'your answer',
     'rank.0': 'Ready to start',
     'rank.1': 'Little goat',
-    'rank.2': 'Mountain goat',
-    'rank.3': 'Summit goat',
-    'rank.4': 'GOAT',
+    'rank.2': 'Young goat',
+    'rank.3': 'Mountain goat',
+    'rank.4': 'Climbing goat',
+    'rank.5': 'Summit goat',
+    'rank.6': 'Ibex',
+    'rank.7': 'GOAT',
     'res.kicker': 'Your result',
     'res.main': 'You understood the text at {wpm} words per minute.',
-    'res.main.all': 'You understood all four texts, even at {wpm} words per minute.',
+    'res.main.all': 'You understood all seven texts, even at {wpm} words per minute.',
     'res.main0': '{wpm} words per minute didn’t work out yet. No problem: everyone starts at their own pace.',
     'res.step.ok': 'understood',
     'res.step.no': 'missed',
     'res.step.open': 'not reached',
-    'res.eff': 'Including the pauses at sentence ends, that is about {e} words per minute.',
-    'res.cmp': 'For comparison: adults read English texts silently at about 240 words per minute on average (Brysbaert 2019).',
+    'res.bar.you': 'You in the test (with sentence pauses)',
+    'res.bar.avg': 'Average for silent reading in English',
+    'res.cmp': 'For comparison: on average, adults read silently at about {en} words per minute in English and about {de} in German.',
     'res.best': 'Your best so far: {wpm} words per minute.',
     'res.newbest': 'New personal best!',
     'res.tip': 'Tip: for dense texts like papers, start a little slower and speed up step by step.',
@@ -987,6 +1003,21 @@ const I18N = {
     'test.a4.ok': 'The power went out.',
     'test.a4.x1': 'The band took a break.',
     'test.a4.x2': 'It started to rain.',
+    'test.a5.text': 'Leon wanted to do some quick shopping after work: milk, pasta and tomatoes. At the checkout, he realized that his wallet was still at the office. A long line was already waiting behind him. The cashier stayed perfectly calm and asked whether he could pay with his phone. Leon had never tried that before, but it worked right away. A little boy behind him clapped with excitement. Since then, Leon pays almost only with his phone.',
+    'test.a5.q': 'Where was Leon’s wallet?',
+    'test.a5.ok': 'At the office',
+    'test.a5.x1': 'At home',
+    'test.a5.x2': 'In the shopping cart',
+    'test.a6.text': 'Hanna was supposed to water her neighbor’s plants for two weeks. On the first day, she found a note in the kitchen: water the cacti only once a week, the basil every day. Hanna was proud that she did everything right. On the last day, she discovered an orchid behind the curtain that she had completely overlooked. Luckily, the orchid still looked fresh. Her neighbor just laughed: the orchid was made of plastic.',
+    'test.a6.q': 'Why did the orchid still look fresh?',
+    'test.a6.ok': 'It was made of plastic',
+    'test.a6.x1': 'Hanna had watered it',
+    'test.a6.x2': 'It stood in the shade',
+    'test.a7.text': 'Ben wanted to bake a cake for his girlfriend’s birthday. He found a recipe for chocolate cake and bought all the ingredients. Because he was nervous, he mixed up the sugar and the salt. The cake looked wonderful, smelled of chocolate and even had candles. At the first bite, his girlfriend pulled a face, and then they both had to laugh. They ordered pizza and had ice cream from the supermarket for dessert. That cake was never made again.',
+    'test.a7.q': 'What did Ben mix up?',
+    'test.a7.ok': 'Sugar and salt',
+    'test.a7.x1': 'Flour and sugar',
+    'test.a7.x2': 'Butter and oil',
     'test.b1.text': 'On Sunday, the Berger family brought home a young dog from the animal shelter. He was brown, had one white ear and was called Bruno. The children had already bought a basket, a leash and a ball. But Bruno was only interested in one of Dad’s old slippers. He carried it proudly through the whole apartment and put it in his basket at night. Since then, Dad has been looking for his other slipper every morning.',
     'test.b1.q': 'What was Bruno most interested in?',
     'test.b1.ok': 'An old slipper',
@@ -1006,10 +1037,25 @@ const I18N = {
     'test.b4.q': 'Where did Emma have the interview?',
     'test.b4.ok': 'In the train’s dining car',
     'test.b4.x1': 'At the company’s office',
-    'test.b4.x2': 'On the platform'
+    'test.b4.x2': 'On the platform',
+    'test.b5.text': 'Lukas had bought cinema tickets for the new science fiction film and invited his best friend. They got popcorn and sat down on time in their seats in row nine. When the film started, dancing penguins appeared on the screen instead of spaceships. Lukas had booked tickets for a children’s film by mistake. He wanted to leave right away, but his friend insisted on staying. In the end, they both found the penguins funnier than any spaceship.',
+    'test.b5.q': 'What kind of film did they watch?',
+    'test.b5.ok': 'A children’s film with penguins',
+    'test.b5.x1': 'A science fiction film',
+    'test.b5.x2': 'A horror film',
+    'test.b6.text': 'Clara wanted to take part in the five-kilometer city run for the first time. She trained for three months, every Tuesday and Saturday in the park. On the morning of the run, she forgot her sports watch and was therefore unsure how fast she was going. She simply ran by feel and listened to her breathing. At the finish, the big clock showed her best time so far. Since then, Clara sometimes runs without a watch on purpose.',
+    'test.b6.q': 'What did Clara forget on the morning of the run?',
+    'test.b6.ok': 'Her sports watch',
+    'test.b6.x1': 'Her running shoes',
+    'test.b6.x2': 'Her race number',
+    'test.b7.text': 'Grandpa Karl got a tablet from his grandchildren for his birthday. For the first few days, it lay unused in the cupboard because he was afraid of breaking something. Then his granddaughter showed him how a video call works. Since then, Karl calls her every evening at eight, whether she has time or not. By now, he even sends her photos from his garden. His tomatoes are especially big this year.',
+    'test.b7.q': 'When does Karl call his granddaughter?',
+    'test.b7.ok': 'Every evening at eight',
+    'test.b7.x1': 'Every morning at eight',
+    'test.b7.x2': 'Every Sunday'
   },
   de: {
-    'app.title': 'GOATreader: PDFs und Texte schneller lesen',
+    'app.title': 'GOATreader: Speedreading für alle',
     'doc.sampleChip': 'Beispiel',
     'doc.untitled': 'Eigener Text',
     'doc.file': 'Datei',
@@ -1191,10 +1237,10 @@ const I18N = {
     'home.paste.key': 'Tipp: Drück irgendwo auf dieser Seite {key}, und dein kopierter Text startet sofort.',
     'key.paste': 'Strg+V',
     'home.train.title': 'Trainieren und testen',
-    'home.train.desc': 'Wie schnell liest du wirklich? Vier kurze Texte, jeder schneller als der davor, nach jedem eine Frage.',
-    'home.train.levels': 'Vier Stufen: 300, 400, 500 und 600 Wörter pro Minute',
+    'home.train.desc': 'Wie schnell liest du wirklich? Sieben kurze Texte von 300 bis 900 Wörtern pro Minute, jeder schneller als der davor, nach jedem eine Frage.',
+    'home.train.levels': 'Sieben Stufen von 300 bis 900 Wörtern pro Minute, in Schritten von 100',
     'home.train.go': 'GOAT-Test starten',
-    'home.train.time': 'Dauert etwa zwei Minuten.',
+    'home.train.time': 'Dauert etwa zwei bis drei Minuten.',
     'home.train.best': 'Dein Rekord: {wpm} Wörter pro Minute',
     'test.title': 'GOAT-Test',
     'test.exit': 'Test beenden',
@@ -1213,18 +1259,22 @@ const I18N = {
     'quiz.sr.mine': 'deine Antwort',
     'rank.0': 'Startklar',
     'rank.1': 'Zicklein',
-    'rank.2': 'Bergziege',
-    'rank.3': 'Gipfelziege',
-    'rank.4': 'GOAT',
+    'rank.2': 'Jungziege',
+    'rank.3': 'Bergziege',
+    'rank.4': 'Kletterziege',
+    'rank.5': 'Gipfelziege',
+    'rank.6': 'Steinbock',
+    'rank.7': 'GOAT',
     'res.kicker': 'Dein Ergebnis',
     'res.main': 'Du hast den Text bei {wpm} Wörtern pro Minute verstanden.',
-    'res.main.all': 'Du hast alle vier Texte verstanden, sogar bei {wpm} Wörtern pro Minute.',
+    'res.main.all': 'Du hast alle sieben Texte verstanden, sogar bei {wpm} Wörtern pro Minute.',
     'res.main0': 'Bei {wpm} Wörtern pro Minute hat es noch nicht geklappt. Kein Problem: Jeder fängt bei seinem Tempo an.',
     'res.step.ok': 'verstanden',
     'res.step.no': 'daneben',
     'res.step.open': 'nicht erreicht',
-    'res.eff': 'Mit den Pausen an den Satzenden sind das etwa {e} Wörter pro Minute.',
-    'res.cmp': 'Zum Vergleich: Erwachsene lesen englische Texte still im Schnitt mit etwa 240 Wörtern pro Minute (Brysbaert 2019).',
+    'res.bar.you': 'Du im Test (mit Satzpausen)',
+    'res.bar.avg': 'Durchschnitt beim stillen Lesen auf Deutsch',
+    'res.cmp': 'Zum Vergleich: Erwachsene lesen still im Schnitt etwa {de} Wörter pro Minute auf Deutsch und etwa {en} auf Englisch.',
     'res.best': 'Dein bisheriger Rekord: {wpm} Wörter pro Minute.',
     'res.newbest': 'Neuer persönlicher Rekord!',
     'res.tip': 'Tipp: Bei dichten Texten wie Fachartikeln starte etwas langsamer und steigere dich Schritt für Schritt.',
@@ -1271,6 +1321,21 @@ const I18N = {
     'test.a4.ok': 'Der Strom fiel aus.',
     'test.a4.x1': 'Die Band machte eine Pause.',
     'test.a4.x2': 'Es fing an zu regnen.',
+    'test.a5.text': 'Leon wollte nach der Arbeit schnell einkaufen: Milch, Nudeln und Tomaten. An der Kasse merkte er, dass sein Geldbeutel noch im Büro lag. Hinter ihm wartete schon eine lange Schlange. Die Kassiererin blieb ganz ruhig und fragte, ob er mit dem Handy bezahlen könne. Leon hatte das noch nie ausprobiert, aber es klappte sofort. Ein kleiner Junge hinter ihm klatschte begeistert. Seitdem bezahlt Leon fast nur noch mit dem Handy.',
+    'test.a5.q': 'Wo lag Leons Geldbeutel?',
+    'test.a5.ok': 'Im Büro',
+    'test.a5.x1': 'Zu Hause',
+    'test.a5.x2': 'Im Einkaufswagen',
+    'test.a6.text': 'Hanna sollte zwei Wochen lang die Pflanzen ihrer Nachbarin gießen. Am ersten Tag fand sie in der Küche einen Zettel: Bitte die Kakteen nur einmal pro Woche, den Basilikum jeden Tag. Hanna war stolz, dass sie alles richtig machte. Am letzten Tag entdeckte sie hinter dem Vorhang noch eine Orchidee, die sie komplett übersehen hatte. Zum Glück sah die Orchidee noch frisch aus. Die Nachbarin lachte nur: Die Orchidee war aus Plastik.',
+    'test.a6.q': 'Warum sah die Orchidee noch frisch aus?',
+    'test.a6.ok': 'Sie war aus Plastik',
+    'test.a6.x1': 'Hanna hatte sie gegossen',
+    'test.a6.x2': 'Sie stand im Schatten',
+    'test.a7.text': 'Ben wollte seiner Freundin zum Geburtstag einen Kuchen backen. Er fand ein Rezept für Schokoladenkuchen und kaufte alle Zutaten. Weil er nervös war, verwechselte er Zucker und Salz. Der Kuchen sah wunderbar aus, roch nach Schokolade und hatte sogar Kerzen. Beim ersten Bissen verzog seine Freundin das Gesicht, dann mussten beide lachen. Sie bestellten Pizza und aßen zum Nachtisch Eis aus dem Supermarkt. Den Kuchen gab es nie wieder.',
+    'test.a7.q': 'Was hatte Ben verwechselt?',
+    'test.a7.ok': 'Zucker und Salz',
+    'test.a7.x1': 'Mehl und Zucker',
+    'test.a7.x2': 'Butter und Öl',
     'test.b1.text': 'Familie Berger holte am Sonntag einen jungen Hund aus dem Tierheim. Er war braun, hatte ein weißes Ohr und hieß Bruno. Die Kinder hatten schon ein Körbchen, eine Leine und einen Ball gekauft. Doch Bruno interessierte sich nur für einen alten Hausschuh von Papa. Den trug er stolz durch die ganze Wohnung und legte ihn abends in sein Körbchen. Seitdem sucht Papa jeden Morgen seinen zweiten Schuh.',
     'test.b1.q': 'Wofür interessierte sich Bruno am meisten?',
     'test.b1.ok': 'Für einen alten Hausschuh',
@@ -1290,7 +1355,22 @@ const I18N = {
     'test.b4.q': 'Wo führte Emma das Gespräch?',
     'test.b4.ok': 'Im Speisewagen des Zuges',
     'test.b4.x1': 'Im Büro der Firma',
-    'test.b4.x2': 'Auf dem Bahnsteig'
+    'test.b4.x2': 'Auf dem Bahnsteig',
+    'test.b5.text': 'Lukas hatte Kinokarten für den neuen Science-Fiction-Film gekauft und lud seinen besten Freund ein. Sie holten Popcorn und setzten sich pünktlich auf ihre Plätze in Reihe neun. Als der Film begann, liefen statt Raumschiffen tanzende Pinguine über die Leinwand. Lukas hatte aus Versehen Karten für einen Kinderfilm gebucht. Er wollte sofort gehen, aber sein Freund wollte unbedingt bleiben. Am Ende fanden beide die Pinguine lustiger als jedes Raumschiff.',
+    'test.b5.q': 'Was für einen Film sahen die beiden?',
+    'test.b5.ok': 'Einen Kinderfilm mit Pinguinen',
+    'test.b5.x1': 'Einen Science-Fiction-Film',
+    'test.b5.x2': 'Einen Horrorfilm',
+    'test.b6.text': 'Clara wollte zum ersten Mal beim Stadtlauf über fünf Kilometer mitmachen. Sie trainierte drei Monate lang, jeden Dienstag und Samstag im Park. Am Morgen des Laufs vergaß sie ihre Sportuhr und war deshalb ganz unsicher, wie schnell sie war. Sie lief einfach nach Gefühl und hörte auf ihren Atem. Im Ziel zeigte die große Uhr ihre bisher beste Zeit. Seitdem läuft Clara manchmal absichtlich ohne Uhr.',
+    'test.b6.q': 'Was vergaß Clara am Morgen des Laufs?',
+    'test.b6.ok': 'Ihre Sportuhr',
+    'test.b6.x1': 'Ihre Laufschuhe',
+    'test.b6.x2': 'Ihre Startnummer',
+    'test.b7.text': 'Opa Karl bekam von seinen Enkeln zum Geburtstag ein Tablet. Die ersten Tage lag es unbenutzt im Schrank, weil er Angst hatte, etwas kaputt zu machen. Dann zeigte ihm seine Enkelin, wie ein Videoanruf funktioniert. Seitdem ruft Karl sie jeden Abend um acht an, egal ob sie gerade Zeit hat oder nicht. Inzwischen schickt er ihr sogar Fotos aus seinem Garten. Seine Tomaten sind dieses Jahr besonders groß.',
+    'test.b7.q': 'Wann ruft Karl seine Enkelin an?',
+    'test.b7.ok': 'Jeden Abend um acht',
+    'test.b7.x1': 'Jeden Morgen um acht',
+    'test.b7.x2': 'Jeden Sonntag'
   }
 };
 
@@ -3241,7 +3321,9 @@ function renderHome() {
   const best = testBest();
   H.best.hidden = !best;
   if (best) H.best.textContent = t('home.train.best', { wpm: TEST_LEVELS[best - 1] });
-  for (const sel of ['#levels span', '#ranks span']) document.querySelectorAll(sel).forEach((x, k) => x.classList.toggle('done', k < best));
+  document.querySelectorAll('#levels span').forEach((x, k) => x.classList.toggle('done', k < best));
+  const rk = document.querySelectorAll('#ranks span');   // nur Anfang (Zicklein) und Ziel (GOAT)
+  rk[0].classList.toggle('done', best > 0); rk[1].classList.toggle('done', best === TEST_LEVELS.length);
   H.introTime.textContent = t('home.intro.time', { t: fmtDur(sampleDuration()) });
   H.key.textContent = t('home.paste.key', { key: pasteKey() });
   updateCount();
@@ -3318,7 +3400,11 @@ document.addEventListener('paste', e => {
 });
 
 // --- GOAT-Test: vier Stufen, je ein kurzer Text und eine Frage; eine falsche Antwort beendet den Test ---
-const TEST_LEVELS = [300, 400, 500, 600];
+const TEST_LEVELS = [300, 400, 500, 600, 700, 800, 900];   // Victor, 18.10.2026: 300 bis 900 in Hunderterschritten
+// Stilles Lesen Erwachsener, Wörter pro Minute: EN 238 (Meta-Analyse Brysbaert 2019). DE geschätzt: dieselben übersetzten
+// Texte schaffen Erwachsene auf Deutsch mit 179, auf Englisch mit 228 Wörtern pro Minute (laut, Trauzettel-Klosinski und
+// Dietz 2012), also rund 21 % weniger wegen längerer Wörter; 238 × 179 / 228 = 187. Gerundet: EN 240, DE 190.
+const READ_AVG = { en: 240, de: 190 };
 const TEST_SETS = ['a', 'b'];
 const K_TEST = 'goatreader.test.v1';   // { best: geschaffte Stufen 0 bis 4, next: nächster Textsatz }
 const TEST = { set: 0, level: 0, order: [0, 1, 2], answered: null, answers: [], passed: 0, prevBest: 0 };
@@ -3420,9 +3506,17 @@ function renderResult() {
     li.append(b, s);
     ol.append(li);
   });
-  const eff = $('#result-eff');
-  eff.hidden = !p;
-  if (p) eff.textContent = t('res.eff', { e: fmtN(Math.round(testEff(p - 1) / 10) * 10) });
+  // Vergleich: eigenes Testtempo mit Satzpausen gegen den Durchschnitt beim stillen Lesen in dieser Sprache
+  const avg = READ_AVG[LANG] || READ_AVG.en;
+  $('#result-cmp').textContent = t('res.cmp', { en: fmtN(READ_AVG.en), de: fmtN(READ_AVG.de) });
+  $('#result-bars').hidden = !p;
+  if (p) {
+    const you = Math.round(testEff(p - 1) / 10) * 10, max = Math.max(you, avg);
+    $('#bar-you').style.width = (you / max * 100).toFixed(1) + '%';
+    $('#bar-avg').style.width = (avg / max * 100).toFixed(1) + '%';
+    $('#bar-you-n').textContent = `${fmtN(you)} ${t('tempo.unit')}`;
+    $('#bar-avg-n').textContent = `${fmtN(avg)} ${t('tempo.unit')}`;
+  }
   const best = $('#result-best');
   best.hidden = !(TEST.prevBest > p || (p > TEST.prevBest && TEST.prevBest > 0));
   best.textContent = TEST.prevBest > p ? t('res.best', { wpm: TEST_LEVELS[TEST.prevBest - 1] }) : t('res.newbest');
