@@ -512,12 +512,12 @@ body.is-playing .tip{display:none}
         </section>
         <section class="choice" id="choice-train" aria-labelledby="choice-train-h">
           <div class="choice-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5l3.5-3.5M10 2.5h4M12 2.5V6"/></svg><h2 id="choice-train-h" data-i18n="home.train.title">Train and test</h2></div>
-          <p class="choice-desc" data-i18n="home.train.desc">How fast do you really read? Four short texts, each one faster than the last, with a question after each.</p>
+          <p class="choice-desc" data-i18n="home.train.desc">How fast do you really read? Seven short texts from 300 to 900 words per minute, each one faster than the last, with a question after each.</p>
           <div class="levels" id="levels" role="img" aria-label="Seven levels from 300 to 900 words per minute, in steps of 100" data-i18n-attr="aria-label:home.train.levels"><span>300</span><span>400</span><span>500</span><span>600</span><span>700</span><span>800</span><span>900</span></div>
           <div class="ranks" id="ranks" aria-hidden="true"><span data-i18n="rank.1">Little goat</span><span data-i18n="rank.7">GOAT</span></div>
           <div class="row">
             <button class="btn primary" id="test-start" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4h11l-2 4 2 4H5"/></svg><span data-i18n="home.train.go">Start the GOAT test</span></button>
-            <span class="note" data-i18n="home.train.time">Takes about two minutes.</span>
+            <span class="note" data-i18n="home.train.time">Takes about two to three minutes.</span>
           </div>
           <p class="note" id="test-best" hidden></p>
         </section>
@@ -595,7 +595,7 @@ body.is-playing .tip{display:none}
       <ol class="steps" id="result-steps"></ol>
       <div class="cmp" id="result-bars" hidden>
         <div class="cmp-row you"><span class="cmp-l" data-i18n="res.bar.you">You in the test (with sentence pauses)</span><span class="cmp-t" aria-hidden="true"><i id="bar-you"></i></span><b class="cmp-n" id="bar-you-n"></b></div>
-        <div class="cmp-row"><span class="cmp-l" data-i18n="res.bar.avg">Average for silent reading</span><span class="cmp-t" aria-hidden="true"><i id="bar-avg"></i></span><b class="cmp-n" id="bar-avg-n"></b></div>
+        <div class="cmp-row"><span class="cmp-l" data-i18n="res.bar.avg">Average for silent reading in English</span><span class="cmp-t" aria-hidden="true"><i id="bar-avg"></i></span><b class="cmp-n" id="bar-avg-n"></b></div>
       </div>
       <p class="note" id="result-cmp"></p>
       <p class="note" id="result-best" hidden></p>
@@ -618,7 +618,7 @@ body.is-playing .tip{display:none}
 <div class="scrim" id="scrim" hidden></div>
 
 <aside class="panel" id="panel-load" role="dialog" aria-modal="true" aria-labelledby="h-load" hidden>
-  <div class="panel-head"><h2 id="h-load" data-i18n="load.title">Load a text</h2>
+  <div class="panel-head"><h2 id="h-load" data-i18n="load.title">Load text</h2>
     <button class="btn ghost icon" type="button" data-close aria-label="Close" data-i18n-attr="aria-label:close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
   <div class="panel-body">
@@ -668,11 +668,11 @@ body.is-playing .tip{display:none}
     <div class="group" id="clean-box">
       <span class="label" data-i18n="clean.title">Clean-up</span>
       <label class="check"><input type="checkbox" id="opt-dropRunning"><span data-i18n="clean.running">Remove headers, footers, page numbers and formula fragments</span></label>
-      <label class="check"><input type="checkbox" id="opt-dropCites"><span data-i18n="clean.cites">Hide citation brackets and footnote numbers</span><span class="help" data-i18n="clean.cites.help">e.g. [12] or (Rayner et al., 2016)</span></label>
-      <label class="check"><input type="checkbox" id="opt-dropRefs"><span data-i18n="clean.refs">Leave out the reference list</span></label>
+      <label class="check"><input type="checkbox" id="opt-dropCites"><span data-i18n="clean.cites">Remove in-text citations and footnote numbers</span><span class="help" data-i18n="clean.cites.help">e.g. [12] or (Rayner et al., 2016)</span></label>
+      <label class="check"><input type="checkbox" id="opt-dropRefs"><span data-i18n="clean.refs">Leave out the reference list and everything after it</span></label>
       <label class="check"><input type="checkbox" id="opt-headings"><span data-i18n="clean.heads">Detect headings</span><span class="help" data-i18n="clean.heads.help">for the outline and the section display</span></label>
       <div class="row"><button class="btn" type="button" id="reclean" data-i18n="clean.again">Clean up again</button></div>
-      <p class="note" id="reclean-note" data-i18n="clean.note" hidden>Applies to the next PDF import. To clean up this PDF again, load it once more.</p>
+      <p class="note" id="reclean-note" data-i18n="clean.note" hidden>Applies to the next file you load. To clean up a file from “Recently read” again, load it once more.</p>
     </div>
   </div>
 </aside>
@@ -696,7 +696,7 @@ body.is-playing .tip{display:none}
       <div class="field"><label for="opt-clausePause" data-i18n="set.clause">After a comma, semicolon or colon</label><output id="out-clausePause"></output><input type="range" id="opt-clausePause" min="0" max="1.5" step="0.1"></div>
       <div class="field"><label for="opt-paraPause" data-i18n="set.para">At the end of a paragraph</label><output id="out-paraPause"></output><input type="range" id="opt-paraPause" min="0" max="4" step="0.25"></div>
       <label class="check"><input type="checkbox" id="opt-longWords"><span data-i18n="set.long">Show long words a little longer</span></label>
-      <label class="check"><input type="checkbox" id="opt-paraStop"><span data-i18n="set.paraStop">Stop after each paragraph</span><span class="help" data-i18n="set.paraStop.help">Time to tell yourself the key point. Continue with Space.</span></label>
+      <label class="check"><input type="checkbox" id="opt-paraStop"><span data-i18n="set.paraStop">Stop after each paragraph</span><span class="help" data-i18n="set.paraStop.help">Time to tell yourself the key point. Tap or press Space to continue.</span></label>
     </div>
     <div class="group">
       <span class="label" data-i18n="set.display">Display</span>
@@ -720,7 +720,7 @@ body.is-playing .tip{display:none}
         <dt data-i18n="set.k.home">Home</dt><dd data-i18n="set.k.home.d">back to the beginning</dd>
         <dt>Esc</dt><dd data-i18n="set.k.esc.d">close the panel</dd>
       </dl>
-      <p class="note" data-i18n="set.phone">On a phone: tap the reading window to start and pause; swipe left or right to jump one sentence.</p>
+      <p class="note" data-i18n="set.phone">On a phone: tap the reading window to start or pause. Swipe left for the next sentence, right for the previous one.</p>
     </div>
     <div class="row"><button class="btn" type="button" id="reset-settings" data-i18n="set.reset">Reset to defaults</button></div>
   </div>
@@ -932,7 +932,7 @@ const I18N = {
     'test.card.sub': 'Read the short text. A question follows. Tap the reading window or press Space to start.',
     'quiz.kicker': 'Level {k} of {n}, {wpm} words per minute',
     'quiz.ok.next': 'Correct! Next up: {wpm} words per minute.',
-    'quiz.ok.last': 'Correct! You made it through all four levels.',
+    'quiz.ok.last': 'Correct! You made it through all seven levels.',
     'quiz.no': 'Not quite. The answer was: {a}',
     'quiz.next': 'Next level',
     'quiz.result': 'See your result',
@@ -1250,7 +1250,7 @@ const I18N = {
     'test.card.sub': 'Lies den kurzen Text. Danach kommt eine Frage. Tippe aufs Lesefenster oder drück die Leertaste.',
     'quiz.kicker': 'Stufe {k} von {n}, {wpm} Wörter pro Minute',
     'quiz.ok.next': 'Richtig! Weiter geht’s mit {wpm} Wörtern pro Minute.',
-    'quiz.ok.last': 'Richtig! Du hast alle vier Stufen geschafft.',
+    'quiz.ok.last': 'Richtig! Du hast alle sieben Stufen geschafft.',
     'quiz.no': 'Leider nicht. Richtig war: {a}',
     'quiz.next': 'Nächste Stufe',
     'quiz.result': 'Zum Ergebnis',
@@ -3399,7 +3399,7 @@ document.addEventListener('paste', e => {
   if (tx && tx.trim()) readPasted(tx);   // Text hat Vorrang vor Bildern, die Office-Programme mitkopieren
 });
 
-// --- GOAT-Test: vier Stufen, je ein kurzer Text und eine Frage; eine falsche Antwort beendet den Test ---
+// --- GOAT-Test: sieben Stufen (TEST_LEVELS), je ein kurzer Text und eine Frage; eine falsche Antwort beendet den Test ---
 const TEST_LEVELS = [300, 400, 500, 600, 700, 800, 900];   // Victor, 18.10.2026: 300 bis 900 in Hunderterschritten
 // Stilles Lesen Erwachsener, Wörter pro Minute: EN 238 (Meta-Analyse Brysbaert 2019). DE geschätzt: dieselben übersetzten
 // Texte schaffen Erwachsene auf Deutsch mit 179, auf Englisch mit 228 Wörtern pro Minute (laut, Trauzettel-Klosinski und
